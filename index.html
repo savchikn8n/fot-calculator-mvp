@@ -1,0 +1,830 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;div id="fot-app"&gt;&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#fot-app{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#f4f4f5}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>#fot-app *{box-sizing:border-box}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.bg{min-height:100vh;background:#09090b}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.wrap{max-width:1500px;margin:0 auto;padding:24px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.grid{display:grid;gap:16px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>@media (min-width:1024px){.grid{grid-template-columns:340px 1fr}}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.card{border:1px solid #27272a;background:rgba(9,9,11,.65);border-radius:24px;box-shadow:0 18px 40px rgba(0,0,0,.35);overflow:hidden}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.card-h{padding:18px 18px 10px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.card-b{padding:0 18px 18px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.t{font-size:13px;font-weight:600;color:#fafafa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.st{font-size:12px;color:#a1a1aa;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.chip{border:1px solid #27272a;background:rgba(9,9,11,.45);border-radius:16px;padding:8px 10px;font-size:12px;color:#a1a1aa}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.row{display:grid;gap:12px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.pill{border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;user-select:none}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.pill.on{background:#fafafa;color:#09090b}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.pill.off{background:rgba(9,9,11,.35);color:#e4e4e7;border:1px solid #27272a}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.btn{border-radius:16px;padding:12px 14px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid #27272a}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.btn.primary{background:#fafafa;color:#09090b;border-color:#fafafa}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.btn.ghost{background:rgba(9,9,11,.35);color:#e4e4e7}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.sel,.inp{width:100%;border-radius:14px;border:1px solid #27272a;background:#09090b;color:#fafafa;padding:10px 12px;font-size:13px;outline:none}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.inp{text-align:right}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.sel:focus,.inp:focus{box-shadow:0 0 0 2px rgba(113,113,122,.7)}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.legend{border:1px solid #27272a;background:rgba(9,9,11,.35);border-radius:24px;padding:18px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.lg{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#e4e4e7}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:10px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.muted{color:#a1a1aa;font-size:12px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;font-size:11px;color:#a1a1aa}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.cal-grid{margin-top:8px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.cell{height:80px;border-radius:18px;border:1px solid rgba(39,39,42,.85);background:rgba(9,9,11,.25)}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.day{padding:10px 12px;cursor:pointer;user-select:none;transition:background .15s}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.day:hover{background:rgba(9,9,11,.45)}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.cell.red{background:rgba(244,63,94,.15);border-color:rgba(244,63,94,.25)}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.cell.yel{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.25)}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.cell.grn{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.25)}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.daytop{display:flex;justify-content:space-between;gap:8px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.dnum{font-size:14px;font-weight:800;color:#fafafa}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.drev{font-size:11px;color:#e4e4e7;font-variant-numeric:tabular-nums}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.small{margin-top:6px;font-size:11px;line-height:1.25;color:#e4e4e7}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.cal-nav{margin-top:14px;display:flex;justify-content:space-between;gap:12px;align-items:center}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.mid{font-size:13px;color:#d4d4d8}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.split{display:grid;gap:16px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>@media (min-width:768px){.split{grid-template-columns:1fr 1fr}}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.section{border:1px solid #27272a;background:rgba(9,9,11,.35);border-radius:18px;padding:14px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.secTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.secT{font-size:13px;font-weight:700;color:#fafafa}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.secS{font-size:12px;color:#a1a1aa;margin-top:6px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.tableWrap{margin-top:12px;border:1px solid #27272a;border-radius:18px;overflow:auto}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>th,td{padding:10px 12px;border-top:1px solid #27272a}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>thead th{border-top:none;background:rgba(9,9,11,.6);color:#d4d4d8;font-weight:700}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>tfoot td{background:rgba(9,9,11,.6);font-weight:800;color:#fafafa}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>td.tr{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.miniIn{padding:8px 10px;border-radius:12px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.modal{position:fixed;inset:0;z-index:99999;display:none}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.modal.on{display:block}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.back{position:absolute;inset:0;background:rgba(0,0,0,.62)}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.sheet{position:absolute;inset:0;padding:16px;overflow:auto}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.dialog{max-width:980px;margin:0 auto;border-radius:24px;border:1px solid #27272a;background:#09090b;box-shadow:0 30px 80px rgba(0,0,0,.7);overflow:hidden}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.dlgH{padding:18px 18px 12px;border-bottom:1px solid #27272a;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.dlgB{padding:18px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.role{border:1px solid #27272a;background:rgba(9,9,11,.35);border-radius:18px;padding:14px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.roleTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.roleT{font-size:13px;font-weight:800}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.roleS{font-size:11px;color:#a1a1aa;margin-top:6px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.add{padding:10px 12px;border-radius:14px;border:1px solid #27272a;background:rgba(9,9,11,.35);color:#e4e4e7;cursor:pointer;font-weight:700}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.del{padding:10px 12px;border-radius:14px;border:1px solid #27272a;background:rgba(244,63,94,.12);color:#fecdd3;cursor:pointer;font-weight:800}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.rgrid{margin-top:10px;display:grid;grid-template-columns:repeat(14,1fr);gap:8px;align-items:center}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.col4{grid-column:span 4}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.col2{grid-column:span 2}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.payout{text-align:right}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.pTop{font-weight:800;color:#fafafa;font-variant-numeric:tabular-nums}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.pSub{font-size:11px;color:#a1a1aa;font-variant-numeric:tabular-nums;margin-top:4px}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>.hint{font-size:11px;color:#a1a1aa;margin-top:10px}</p>
+<p class="p1">&lt;/style&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;script&gt;</p>
+<p class="p1">(function(){</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const el=document.getElementById("fot-app");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>if(!el) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const MONTHS=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const ADMINS=["Кристина","Михаил","Дарья"];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const KMS=["Юра","Рудольф","Женя","Леонид","Дарья"];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const MANAGER_NAME="Дарья";</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const DEFAULT_RATES={</p>
+<p class="p1"><span class="Apple-converted-space">    </span>tier1:{admin:"8",km_main:"10",km_support:"7",km_support2:"7"},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>tier2:{admin:"7.5",km_main:"9",km_support:"6",km_support2:"6"},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>tier3:{admin:"6.5",km_main:"8",km_support:"5",km_support2:"5"},</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const WEEKDAYS=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const STORAGE_KEY="tilda:fot:store:v15";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const pad2=n=&gt;String(n).padStart(2,"0");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const monthKey=(y,m)=&gt;`${y}-${pad2(m+1)}`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const wd=d=&gt;WEEKDAYS[d]||"";</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const numStr=x=&gt;String(x??"").trim().split("").map(ch=&gt;ch===","</p>
+<p class="p1"><span class="Apple-converted-space">    </span>?".":(ch==="₽"?"":ch)).join("").replace(/[^0-9.\-]/g,"");</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const n0=x=&gt;{const v=Number(numStr(x));return Number.isFinite(v)?Math.max(0,v):0;};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const m0=x=&gt;{const v=Number(numStr(x));return Number.isFinite(v)?v:0;};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const h0=x=&gt;{const v=Number(numStr(x));return Number.isFinite(v)?Math.max(0,v):0;};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const money=n=&gt;Number.isFinite(n)</p>
+<p class="p1"><span class="Apple-converted-space">    </span>?new Intl.NumberFormat("ru-RU",{style:"currency",currency:"RUB",maximumFractionDigits:0}).format(Math.round(n))</p>
+<p class="p1"><span class="Apple-converted-space">    </span>:"—";</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const isFriSat=dt=&gt;{const d=dt.getDay();return d===5||d===6;};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const defHours=role=&gt;role==="admin"?11:role==="km_main"?13:role==="km_support"?7:role==="km_support2"?5:0;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const normalizeRates=r=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const src=r&amp;&amp;typeof r==="object"?r:{};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const pick=(tier,key)=&gt;String((src[tier]||{})[key]??DEFAULT_RATES[tier][key]);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>tier1:{admin:pick("tier1","admin"),km_main:pick("tier1","km_main"),km_support:pick("tier1","km_support"),km_support2:pick("tier1","km_support2")},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>tier2:{admin:pick("tier2","admin"),km_main:pick("tier2","km_main"),km_support:pick("tier2","km_support"),km_support2:pick("tier2","km_support2")},</p>
+<p class="p1"><span class="Apple-converted-space">      </span>tier3:{admin:pick("tier3","admin"),km_main:pick("tier3","km_main"),km_support:pick("tier3","km_support"),km_support2:pick("tier3","km_support2")},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const normalizeInv=inv=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const a=(inv&amp;&amp;inv.admin)||{}, k=(inv&amp;&amp;inv.km)||{};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return{admin:{snacks:String(a.snacks??""),drinks:String(a.drinks??""),beer:String(a.beer??""),bar:String(a.bar??"")},km:{tobacco:String(k.tobacco??"")}};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const normalizeAdv=adv=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const base={}; [...ADMINS,...KMS].forEach(n=&gt;base[n]="");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const src=adv&amp;&amp;typeof adv==="object"?adv:{};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>Object.keys(base).forEach(n=&gt;base[n]=String(src[n]??""));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return base;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const normalizeAdminSalary=sal=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const base={}; ADMINS.forEach(n=&gt;base[n]="");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const src=sal&amp;&amp;typeof sal==="object"?sal:{};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ADMINS.forEach(n=&gt;base[n]=String(src[n]??""));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return base;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const defDay=dt=&gt;({</p>
+<p class="p1"><span class="Apple-converted-space">    </span>admin:[{name:ADMINS[0],hours:String(defHours("admin")),breakage:"0",bonus:"0"}],</p>
+<p class="p1"><span class="Apple-converted-space">    </span>km_main:[{name:KMS[0],hours:String(defHours("km_main")),breakage:"0",bonus:"0"}],</p>
+<p class="p1"><span class="Apple-converted-space">    </span>km_support:[{name:KMS[0],hours:String(defHours("km_support")),breakage:"0",bonus:"0"}],</p>
+<p class="p1"><span class="Apple-converted-space">    </span>km_support2:isFriSat(dt)?[{name:KMS[0],hours:String(defHours("km_support2")),breakage:"0",bonus:"0"}]:[],</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const alloc=(total,rows)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const hs=(rows||[]).map(r=&gt;h0(r&amp;&amp;r.hours));</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const s=hs.reduce((a,b)=&gt;a+b,0);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(s&lt;=0) return (rows||[]).map(()=&gt;0);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return hs.map(h=&gt;total*h/s);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const sumHours=(rows)=&gt; (Array.isArray(rows)?rows:[]).reduce((a,r)=&gt;a + h0(r &amp;&amp; r.hours), 0);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const safeGet=()=&gt;{try{const raw=localStorage.getItem(STORAGE_KEY);const p=raw?JSON.parse(raw):null;return p&amp;&amp;typeof p==="object"?p:{months:{}};}catch(e){return{months:{}};}};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const safeSet=obj=&gt;{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(obj));}catch(e){}};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const state={</p>
+<p class="p1"><span class="Apple-converted-space">    </span>view:"dashboard",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>year:(new Date()).getFullYear(),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>month:(new Date()).getMonth(),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>rev:{},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>asgn:{},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>adv:normalizeAdv(null),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>inv:normalizeInv(null),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>rates:normalizeRates(null),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>manager:{percent:"",seniorBonus:""},</p>
+<p class="p1"><span class="Apple-converted-space">    </span>adminSalary:normalizeAdminSalary(null),</p>
+<p class="p1"><span class="Apple-converted-space">    </span>seniorKm:"",</p>
+<p class="p1"><span class="Apple-converted-space">    </span>activeDay:null,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>loadedKey:null,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>hydrating:false,</p>
+<p class="p1"><span class="Apple-converted-space">    </span>saveTimer:null,</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const tierFrom=r=&gt;r&gt;=70000?{id:"tier3",name:"≥ 70 000"}:r&gt;=50000?{id:"tier2",name:"50 000–69 999"}:{id:"tier1",name:"&lt; 50 000"};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const computeForDay=(revenue, assigns)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const tier=tierFrom(revenue);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const rr=normalizeRates(state.rates)[tier.id];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const a=n0(rr.admin)/100;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const km=n0(rr.km_main)/100;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const ks=n0(rr.km_support)/100;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const adminTotal=revenue*a;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const kmMainTotal=revenue*km;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const supportPool=revenue*ks;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const supHours=sumHours(assigns &amp;&amp; assigns.km_support);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const sup2Hours=sumHours(assigns &amp;&amp; assigns.km_support2);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let sup2Total=0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(supHours&gt;0 &amp;&amp; sup2Hours&gt;0){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>sup2Total=(supportPool/supHours)*sup2Hours;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(sup2Total&gt;supportPool) sup2Total=supportPool;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>return{tier,totals:{admin:adminTotal,km_main:kmMainTotal,km_support:supportPool,km_support2:sup2Total}};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const dim=()=&gt;new Date(state.year,state.month+1,0).getDate();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const key=()=&gt;monthKey(state.year,state.month);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const getDay=(d,dt)=&gt;state.asgn[d]||defDay(dt);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const scheduleSave=()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(state.hydrating) return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(state.saveTimer) clearTimeout(state.saveTimer);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.saveTimer=setTimeout(saveNow,200);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>const saveNow=()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(state.hydrating) return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const k=key();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(state.loadedKey!==k) return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const store=safeGet();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const next={...store,months:{...(store.months||{})}};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>next.months[k]={</p>
+<p class="p1"><span class="Apple-converted-space">      </span>rev:state.rev,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>asgn:state.asgn,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>adv:state.adv,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>inv:normalizeInv(state.inv),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>rates:normalizeRates(state.rates),</p>
+<p class="p1"><span class="Apple-converted-space">      </span>manager:state.manager,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>adminSalary:state.adminSalary,</p>
+<p class="p1"><span class="Apple-converted-space">      </span>seniorKm:state.seniorKm</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>safeSet(next);</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const loadMonth=(k)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.hydrating=true;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const store=safeGet();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const d=store.months&amp;&amp;store.months[k];</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(!d){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.rev={};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.asgn={};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.adv=normalizeAdv(null);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.inv=normalizeInv(null);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.rates=normalizeRates(null);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.manager={percent:"",seniorBonus:""};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.adminSalary=normalizeAdminSalary(null);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.seniorKm="";</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.activeDay=null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.loadedKey=k;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.hydrating=false;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.rev=d.rev||{};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.asgn=d.asgn||{};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.adv=normalizeAdv(d.adv);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.inv=normalizeInv(d.inv);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.rates=normalizeRates(d.rates);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.manager={percent:String((d.manager||{}).percent??""),seniorBonus:String((d.manager||{}).seniorBonus??"")};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.adminSalary=normalizeAdminSalary(d.adminSalary);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.seniorKm=String(d.seniorKm??"");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.activeDay=null;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.loadedKey=k;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.hydrating=false;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const shiftMonth=delta=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const d=new Date(state.year,state.month+delta,1);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.year=d.getFullYear();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.month=d.getMonth();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>loadMonth(key());</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const tierClass=rev=&gt;rev&gt;=70000?"grn":rev&gt;=50000?"yel":"red";</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const uniqNames=rows=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const out=[]; const s=new Set();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>(rows||[]).forEach(r=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const n=String((r&amp;&amp;r.name)||"").trim();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(!n||s.has(n)) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>s.add(n); out.push(n);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return out;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const calcMonthTotals=()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>let revenue=0, fotNet=0;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const sumField=(arr,field)=&gt;(arr||[]).reduce((a,r)=&gt;a+Math.max(0,m0(r&amp;&amp;r[field])),0);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const days=dim();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>for(let d=1; d&lt;=days; d++){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const dt=new Date(state.year,state.month,d);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const r=n0(state.rev[d]);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>revenue+=r;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const a=getDay(d,dt);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const {totals}=computeForDay(r,a);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const br=sumField(a.admin,"breakage")+sumField(a.km_main,"breakage")+sumField(a.km_support,"breakage")+sumField(a.km_support2,"breakage");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pr=sumField(a.admin,"bonus")+sumField(a.km_main,"bonus")+sumField(a.km_support,"bonus")+sumField(a.km_support2,"bonus");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const gross=totals.admin+totals.km_main+totals.km_support+totals.km_support2;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>fotNet+=gross+pr-br;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return{revenue,fotNet};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const calcPeopleTotals=()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const adminTotals={}; const kmTotals={};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>ADMINS.forEach(n=&gt;adminTotals[n]={gross:0,breakage:0});</p>
+<p class="p1"><span class="Apple-converted-space">    </span>KMS.forEach(n=&gt;kmTotals[n]={gross:0,breakage:0});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const add=(roleTotal,roleRows,target)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const rr=Array.isArray(roleRows)?roleRows:[];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const payouts=alloc(roleTotal,rr);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for(let i=0;i&lt;rr.length;i++){</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const name=String((rr[i]&amp;&amp;rr[i].name)||"").trim();</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(!name) continue;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(!target[name]) target[name]={gross:0,breakage:0};</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const b=Math.max(0,m0(rr[i]&amp;&amp;rr[i].bonus));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>target[name].gross+=(payouts[i]||0)+b;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>target[name].breakage+=Math.max(0,m0(rr[i]&amp;&amp;rr[i].breakage));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const days=dim();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>for(let d=1; d&lt;=days; d++){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const dt=new Date(state.year,state.month,d);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const r=n0(state.rev[d]);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const a=state.asgn[d]||defDay(dt);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const {totals}=computeForDay(r,a);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>add(totals.admin,a.admin,adminTotals);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>add(totals.km_main,a.km_main,kmTotals);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>add(totals.km_support,a.km_support,kmTotals);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>add(totals.km_support2,a.km_support2,kmTotals);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>return{adminTotals,kmTotals};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>const html=(s)=&gt;String(s).replace(/[&amp;&lt;&gt;"']/g,m=&gt;({ "&amp;":"&amp;amp;","&lt;":"&amp;lt;","&gt;":"&amp;gt;","\"":"&amp;quot;","'":"&amp;#039;" }[m]));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>function render(){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const days=dim();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const mk=key();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const mt=calcMonthTotals();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const pt=calcPeopleTotals();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const cal=(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const fd=new Date(state.year,state.month,1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const start=fd.getDay();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const total=Math.ceil((start+days)/7)*7;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let h=`&lt;div class="card"&gt;&lt;div class="card-h"&gt;&lt;div&gt;&lt;div class="t"&gt;Календарь&lt;/div&gt;&lt;div class="st"&gt;Клик по дню — открыть редактор&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="card-b"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="cal-head"&gt;${WEEKDAYS.map(w=&gt;`&lt;div&gt;${w}&lt;/div&gt;`).join("")}&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="cal-grid"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>for(let i=0;i&lt;total;i++){</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const d=i-start+1;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(d&lt;1||d&gt;days){ h+=`&lt;div class="cell"&gt;&lt;/div&gt;`; continue; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const dt=new Date(state.year,state.month,d);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const rev=n0(state.rev[d]);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const a=getDay(d,dt);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const admins=uniqNames(a.admin).join(", ")||"—";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const kms=uniqNames([...(a.km_main||[]),...(a.km_support||[]),...(a.km_support2||[])]).join(", ")||"—";</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const cls=tierClass(rev);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div class="cell ${cls}"&gt;&lt;div class="day" data-act="openDay" data-day="${d}"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div class="daytop"&gt;&lt;div class="dnum"&gt;${d}&lt;/div&gt;&lt;div class="drev"&gt;${rev?html(money(rev)):""}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div class="small"&gt;&lt;div&gt;А: ${html(admins)}&lt;/div&gt;&lt;div&gt;КМ: ${html(kms)}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="cal-nav"&gt;&lt;button class="btn ghost" data-act="prevMonth"&gt;← Пред.&lt;/button&gt;&lt;div class="mid"&gt;${MONTHS[state.month]} ${state.year}&lt;/div&gt;&lt;button class="btn ghost" data-act="nextMonth"&gt;След. →&lt;/button&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return h;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const settings=(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const r=normalizeRates(state.rates);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const tiers=[{id:"tier1",t:"&lt; 50 000"},{id:"tier2",t:"50 000–69 999"},{id:"tier3",t:"≥ 70 000"}];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let h=`&lt;div class="card"&gt;&lt;div class="card-h"&gt;&lt;div&gt;&lt;div class="t"&gt;Настройки&lt;/div&gt;&lt;div class="st"&gt;Процентные ставки по тарифам&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="card-b"&gt;&lt;div class="row"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>tiers.forEach(x=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div class="section"&gt;&lt;div class="secT"&gt;${x.t}&lt;/div&gt;&lt;div class="row2" style="margin-top:12px"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div&gt;&lt;div class="muted" style="margin-bottom:6px"&gt;Админ %&lt;/div&gt;&lt;input class="inp" data-act="setRate" data-tier="${x.id}" data-key="admin" value="${html(r[x.id].admin)}"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div&gt;&lt;div class="muted" style="margin-bottom:6px"&gt;КМ осн %&lt;/div&gt;&lt;input class="inp" data-act="setRate" data-tier="${x.id}" data-key="km_main" value="${html(r[x.id].km_main)}"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div&gt;&lt;div class="muted" style="margin-bottom:6px"&gt;КМ сап %&lt;/div&gt;&lt;input class="inp" data-act="setRate" data-tier="${x.id}" data-key="km_support" value="${html(r[x.id].km_support)}"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div&gt;&lt;div class="muted" style="margin-bottom:6px"&gt;КМ сап² %&lt;/div&gt;&lt;input class="inp" data-act="setRate" data-tier="${x.id}" data-key="km_support2" value="${html(r[x.id].km_support2)}"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return h;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const people=(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const inv=normalizeInv(state.inv);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const adminInv=n0(inv.admin.snacks)+n0(inv.admin.drinks)+n0(inv.admin.beer)+n0(inv.admin.bar);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const kmInv=n0(inv.km.tobacco);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const adminShare=ADMINS.length?adminInv/ADMINS.length:0;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const kmShare=KMS.length?kmInv/KMS.length:0;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const adminRows=ADMINS.map(name=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const gross=(pt.adminTotals[name]||{}).gross||0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const boj=(pt.adminTotals[name]||{}).breakage||0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const adv=Math.max(0,m0(state.adv[name]));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const salary=Math.max(0,m0(state.adminSalary[name]));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const net=gross - boj - adv - adminShare + salary;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return{ name,gross,boj,adv,salary,net };</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const kmRows=KMS.map(name=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const gross=(pt.kmTotals[name]||{}).gross||0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const boj=(pt.kmTotals[name]||{}).breakage||0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const adv=Math.max(0,m0(state.adv[name]));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const extra=(name==="Юра")?Math.max(0,m0(state.seniorKm)):0;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const net=gross - boj - adv - kmShare + extra;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return{ name,gross,boj,adv,extra,net };</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const sum=(arr,k)=&gt;arr.reduce((a,r)=&gt;a+(r[k]||0),0);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>let h=`&lt;div class="card"&gt;&lt;div class="card-h"&gt;&lt;div&gt;&lt;div class="t"&gt;Сводка сотрудников&lt;/div&gt;&lt;div class="st"&gt;Оклады/авансы/инвентаризация/доплаты&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="card-b"&gt;&lt;div class="row"&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="section"&gt;&lt;div class="secTop"&gt;&lt;div&gt;&lt;div class="secT"&gt;Администраторы&lt;/div&gt;&lt;div class="secS"&gt;Инвентаризация: ${html(money(adminInv))} · по ${html(money(adminShare))}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div style="width:min(280px,100%)"&gt;&lt;div class="row2"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;input class="inp miniIn" placeholder="Снэки" data-act="setInvA" data-key="snacks" value="${html(inv.admin.snacks)}"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;input class="inp miniIn" placeholder="Напитки" data-act="setInvA" data-key="drinks" value="${html(inv.admin.drinks)}"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;input class="inp miniIn" placeholder="Пиво" data-act="setInvA" data-key="beer" value="${html(inv.admin.beer)}"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;input class="inp miniIn" placeholder="Бар" data-act="setInvA" data-key="bar" value="${html(inv.admin.bar)}"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="tableWrap"&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;th style="width:28%"&gt;Сотр.&lt;/th&gt;&lt;th class="r" style="width:16%"&gt;Нач.&lt;/th&gt;&lt;th class="r" style="width:16%"&gt;Оклад&lt;/th&gt;&lt;th class="r" style="width:14%"&gt;Бой&lt;/th&gt;&lt;th class="r" style="width:14%"&gt;Аванс&lt;/th&gt;&lt;th class="r" style="width:12%"&gt;Итог&lt;/th&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>adminRows.forEach(r=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;tr&gt;&lt;td class="tr"&gt;${html(r.name)}&lt;/td&gt;&lt;td class="r"&gt;${html(money(r.gross))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;td class="r"&gt;&lt;input class="inp miniIn" data-act="setAdminSalary" data-name="${html(r.name)}" value="${html(state.adminSalary[r.name]||"")}"&gt;&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;td class="r"&gt;${html(money(r.boj))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;td class="r"&gt;&lt;input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"&gt;&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;td class="r" style="font-weight:800"&gt;${html(money(r.net))}&lt;/td&gt;&lt;/tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/tbody&gt;&lt;tfoot&gt;&lt;tr&gt;&lt;td&gt;Итого&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(adminRows,"gross")))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(adminRows,"salary")))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(adminRows,"boj")))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(adminRows,"adv")))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(adminRows,"net")))}&lt;/td&gt;&lt;/tr&gt;&lt;/tfoot&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="section"&gt;&lt;div class="secTop"&gt;&lt;div&gt;&lt;div class="secT"&gt;Кальянные мастера&lt;/div&gt;&lt;div class="secS"&gt;Инвентаризация: ${html(money(kmInv))} · по ${html(money(kmShare))}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div style="width:min(280px,100%)"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="muted" style="margin-bottom:6px"&gt;Доплата старшему (Юра)&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;input class="inp miniIn" data-act="setSeniorKm" value="${html(state.seniorKm||"")}"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div style="margin-top:10px"&gt;&lt;input class="inp miniIn" placeholder="Табак" data-act="setInvK" value="${html(inv.km.tobacco)}"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="tableWrap"&gt;&lt;table&gt;&lt;thead&gt;&lt;tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;th style="width:28%"&gt;Сотр.&lt;/th&gt;&lt;th class="r" style="width:18%"&gt;Нач.&lt;/th&gt;&lt;th class="r" style="width:16%"&gt;Плюс&lt;/th&gt;&lt;th class="r" style="width:14%"&gt;Бой&lt;/th&gt;&lt;th class="r" style="width:14%"&gt;Аванс&lt;/th&gt;&lt;th class="r" style="width:10%"&gt;Итог&lt;/th&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>kmRows.forEach(r=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;tr&gt;&lt;td class="tr"&gt;${html(r.name)}&lt;/td&gt;&lt;td class="r"&gt;${html(money(r.gross))}&lt;/td&gt;&lt;td class="r"&gt;${html(money(r.extra))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;td class="r"&gt;${html(money(r.boj))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;td class="r"&gt;&lt;input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"&gt;&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;td class="r" style="font-weight:800"&gt;${html(money(r.net))}&lt;/td&gt;&lt;/tr&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/tbody&gt;&lt;tfoot&gt;&lt;tr&gt;&lt;td&gt;Итого&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(kmRows,"gross")))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(kmRows,"extra")))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(kmRows,"boj")))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(kmRows,"adv")))}&lt;/td&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;td class="r"&gt;${html(money(sum(kmRows,"net")))}&lt;/td&gt;&lt;/tr&gt;&lt;/tfoot&gt;&lt;/table&gt;&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return h;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const manager=(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pct=n0(state.manager.percent);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const pay=mt.revenue*pct/100;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const senior=Math.max(0,m0(state.manager.seniorBonus));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let h=`&lt;div class="card"&gt;&lt;div class="card-h"&gt;&lt;div&gt;&lt;div class="t"&gt;Управляющая&lt;/div&gt;&lt;div class="st"&gt;${MANAGER_NAME} · Итог: ${html(money(pay+senior))}&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="card-b"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="row2"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div&gt;&lt;div class="muted" style="margin-bottom:6px"&gt;Процент от выручки месяца (%)&lt;/div&gt;&lt;input class="inp" data-act="setManager" data-key="percent" value="${html(state.manager.percent||"")}"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div&gt;&lt;div class="muted" style="margin-bottom:6px"&gt;Доплата старшего администратора&lt;/div&gt;&lt;input class="inp" data-act="setManager" data-key="seniorBonus" value="${html(state.manager.seniorBonus||"")}"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="section" style="margin-top:12px"&gt;&lt;div class="muted"&gt;Расчёт&lt;/div&gt;&lt;div style="margin-top:6px;font-size:18px;font-weight:900"&gt;${html(money(pay+senior))}&lt;/div&gt;&lt;div class="muted" style="margin-top:6px"&gt;${html(money(pay))} + ${html(money(senior))}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return h;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const totals=(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let h=`&lt;div class="card"&gt;&lt;div class="card-h"&gt;&lt;div&gt;&lt;div class="t"&gt;Итого&lt;/div&gt;&lt;div class="st"&gt;Сводка месяца&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="card-b"&gt;&lt;div class="row"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="section"&gt;&lt;div class="muted"&gt;Выручка&lt;/div&gt;&lt;div style="margin-top:6px;font-size:22px;font-weight:900"&gt;${html(money(mt.revenue))}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="section"&gt;&lt;div class="muted"&gt;ФОТ (нетто)&lt;/div&gt;&lt;div style="margin-top:6px;font-size:22px;font-weight:900"&gt;${html(money(mt.fotNet))}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return h;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const sidebar=(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const now=new Date();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const yopts=Array.from({length:8}).map((_,i)=&gt;now.getFullYear()-4+i);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>let h=`&lt;div class="card"&gt;&lt;div class="card-h"&gt;&lt;div&gt;&lt;div class="t"&gt;ФОТ-калькулятор (Все Свои)&lt;/div&gt;&lt;div class="st"&gt;Выручка: ${html(money(mt.revenue))} · ФОТ: ${html(money(mt.fotNet))}&lt;/div&gt;&lt;/div&gt;&lt;div class="chip"&gt;${mk}&lt;/div&gt;&lt;/div&gt;&lt;div class="card-b"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="row2"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;select class="sel" data-act="setYear"&gt;${yopts.map(y=&gt;`&lt;option value="${y}" ${y===state.year?"selected":""}&gt;${y}&lt;/option&gt;`).join("")}&lt;/select&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;select class="sel" data-act="setMonth"&gt;${MONTHS.map((m,i)=&gt;`&lt;option value="${i}" ${i===state.month?"selected":""}&gt;${html(m)}&lt;/option&gt;`).join("")}&lt;/select&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="tabs"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="pill ${state.view==="dashboard"?"on":"off"}" data-act="setView" data-view="dashboard"&gt;Дашборд&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="pill ${state.view==="settings"?"on":"off"}" data-act="setView" data-view="settings"&gt;Настройки&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div style="margin-top:14px"&gt;&lt;button class="btn primary" style="width:100%" data-act="clearMonth"&gt;Очистить месяц&lt;/button&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="legend"&gt;&lt;div class="t"&gt;Легенда тарифов&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div style="margin-top:12px" class="row"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="lg"&gt;&lt;div&gt;&lt;span class="dot" style="background:rgba(244,63,94,.65)"&gt;&lt;/span&gt;&amp;lt; 50 000&lt;/div&gt;&lt;div class="muted"&gt;красный&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="lg"&gt;&lt;div&gt;&lt;span class="dot" style="background:rgba(245,158,11,.65)"&gt;&lt;/span&gt;50 000–69 999&lt;/div&gt;&lt;div class="muted"&gt;жёлтый&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="lg"&gt;&lt;div&gt;&lt;span class="dot" style="background:rgba(16,185,129,.65)"&gt;&lt;/span&gt;≥ 70 000&lt;/div&gt;&lt;div class="muted"&gt;зелёный&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;div class="hint"&gt;Сохранение: localStorage (по месяцам).&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return h;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const main=(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(state.view==="settings") return `&lt;div class="row"&gt;${settings}&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return `&lt;div class="row"&gt;${cal}${people}&lt;div class="split"&gt;${manager}${totals}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>const modal=(()=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const open=state.activeDay!=null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const d=state.activeDay;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const dt=open?new Date(state.year,state.month,d):null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const rev=n0(open?state.rev[d]:0);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const assigns=open?getDay(d,dt):null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const c=open?computeForDay(rev, assigns):{tier:{id:"tier1",name:"&lt; 50 000"},totals:{admin:0,km_main:0,km_support:0,km_support2:0}};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const tier=c.tier, totals=c.totals;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>const rolePanel=(title,roleKey,people,total,rows,allowEmpty)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const rr=Array.isArray(rows)?rows:[];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const payouts=alloc(total,rr);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const br=rr.map(r=&gt;Math.max(0,m0(r&amp;&amp;r.breakage)));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const bn=rr.map(r=&gt;Math.max(0,m0(r&amp;&amp;r.bonus)));</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const net=payouts.map((p,i)=&gt;p-(br[i]||0)+(bn[i]||0));</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>let h=`&lt;div class="role" data-role="${roleKey}"&gt;&lt;div class="roleTop"&gt;&lt;div&gt;&lt;div class="roleT"&gt;${html(title)}&lt;/div&gt;&lt;div class="roleS"&gt;Сумма роли: ${html(money(total))}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;button class="add" data-act="addRow" data-role="${roleKey}"&gt;+ Добавить&lt;/button&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(rr.length===0 &amp;&amp; allowEmpty) h+=`&lt;div class="hint"&gt;Нет записей. Добавь человека, если роль была в этот день.&lt;/div&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>rr.forEach((r,idx)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">          </span>h+=`&lt;div class="rgrid"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>h+=`&lt;div class="col2"&gt;&lt;button class="del" data-act="delRow" data-role="${roleKey}" data-idx="${idx}"&gt;Удалить&lt;/button&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>h+=`&lt;div class="col4"&gt;&lt;select class="sel" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="name"&gt;`+</p>
+<p class="p1"><span class="Apple-converted-space">            </span>people.map(p=&gt;`&lt;option value="${html(p)}" ${p===(r.name||"")?"selected":""}&gt;${html(p)}&lt;/option&gt;`).join("")+</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`&lt;/select&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>h+=`&lt;div class="col2"&gt;&lt;input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="hours" value="${html(r.hours??"")}"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>h+=`&lt;div class="col2"&gt;&lt;input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="bonus" value="${html(r.bonus??"0")}" placeholder="Премия"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>h+=`&lt;div class="col2"&gt;&lt;input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"0")}" placeholder="Бой"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>h+=`&lt;div class="col2 payout"&gt;&lt;div class="pTop"&gt;${html(money(net[idx]||0))}&lt;/div&gt;&lt;div class="pSub"&gt;${html(money(payouts[idx]||0))} + ${html(money(bn[idx]||0))} − ${html(money(br[idx]||0))}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>h+=`&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>return h;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>};</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>let h=`&lt;div class="modal ${open?"on":""}" id="fot-modal"&gt;&lt;div class="back" data-act="closeModal"&gt;&lt;/div&gt;&lt;div class="sheet"&gt;&lt;div class="dialog"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="dlgH"&gt;&lt;div&gt;&lt;div class="t"&gt;${open?`Редактор дня · ${state.year}-${pad2(state.month+1)}-${pad2(d)} (${wd(dt.getDay())})`:"Редактор дня"}&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="st"&gt;${open?`Тариф: ${tier.name} · Выручка: ${money(rev)} · Роли: ${money(totals.admin+totals.km_main+totals.km_support+totals.km_support2)}`:""}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;button class="btn ghost" data-act="closeModal"&gt;Закрыть&lt;/button&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;div class="dlgB"&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(open){</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div class="section" style="margin-bottom:12px"&gt;&lt;div class="muted" style="margin-bottom:6px"&gt;Выручка дня&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;input class="inp" data-act="setDayRevenue" value="${html(state.rev[d]??"")}" placeholder="0"&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div class="muted" style="margin-top:8px"&gt;Сейчас: ${html(money(rev))} · Тариф: ${html(tier.name)}&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=rolePanel("Администратор","admin",ADMINS,totals.admin,assigns.admin,false);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div style="height:10px"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=rolePanel("Кальянный мастер","km_main",KMS,totals.km_main,assigns.km_main,false);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div style="height:10px"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=rolePanel("КМ саппорт","km_support",KMS,totals.km_support,assigns.km_support,false);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=`&lt;div style="height:10px"&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>h+=rolePanel("КМ саппорт²","km_support2",KMS,totals.km_support2,assigns.km_support2,true);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">      </span>h+=`&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return h;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>})();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>el.innerHTML=`&lt;div class="bg"&gt;&lt;div class="wrap"&gt;&lt;div class="grid"&gt;&lt;div&gt;${sidebar}&lt;/div&gt;&lt;div class="min"&gt;${main}&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;${modal}&lt;/div&gt;`;</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>function renderKeepFocus(){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const root=el;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const ae=document.activeElement;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const inside=ae &amp;&amp; root.contains(ae);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>let sel=null, ss=null, se=null;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(inside &amp;&amp; ae.getAttribute){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const act=ae.getAttribute("data-act");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(act){</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const parts=["[data-act='"+act+"']"];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const attrs=["data-day","data-name","data-tier","data-key","data-role","data-idx","data-field","data-view"];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>attrs.forEach(a=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const v=ae.getAttribute(a);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>if(v!=null) parts.push("["+a+"='"+CSS.escape(v)+"']");</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>sel=parts.join("");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(typeof ae.selectionStart==="number"){</p>
+<p class="p1"><span class="Apple-converted-space">        </span>ss=ae.selectionStart;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>se=ae.selectionEnd;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>render();</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(sel){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const el2=root.querySelector(sel);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(el2 &amp;&amp; el2.focus){</p>
+<p class="p1"><span class="Apple-converted-space">        </span>el2.focus({preventScroll:true});</p>
+<p class="p1"><span class="Apple-converted-space">        </span>if(ss!=null &amp;&amp; typeof el2.setSelectionRange==="function"){</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const len=(el2.value||"").length;</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const a=Math.min(ss,len);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>const b=Math.min(se==null?ss:se,len);</p>
+<p class="p1"><span class="Apple-converted-space">          </span>try{ el2.setSelectionRange(a,b); }catch(e){}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">      </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>function setAssignDay(day,next){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>state.asgn={...state.asgn,[day]:next};</p>
+<p class="p1"><span class="Apple-converted-space">    </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>function ensureDay(day){</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const dt=new Date(state.year,state.month,day);</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(!state.asgn[day]) state.asgn={...state.asgn,[day]:defDay(dt)};</p>
+<p class="p1"><span class="Apple-converted-space">  </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>el.addEventListener("click",(e)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const t=e.target.closest("[data-act]");</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(!t) return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const act=t.getAttribute("data-act");</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(act==="setView"){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.view=t.getAttribute("data-view");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.activeDay=null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(act==="clearMonth"){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.rev={}; state.asgn={}; state.activeDay=null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(act==="openDay"){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const d=Number(t.getAttribute("data-day"));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.activeDay=d;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ensureDay(d);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(act==="closeModal"){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.activeDay=null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(act==="prevMonth"){ shiftMonth(-1); return; }</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(act==="nextMonth"){ shiftMonth(1); return; }</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(act==="addRow"){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const role=t.getAttribute("data-role");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const d=state.activeDay;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(!d) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ensureDay(d);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const day=state.asgn[d];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const people=(role==="admin")?ADMINS:KMS;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const next={...day,[role]:[...(day[role]||[]),{name:people[0],hours:String(defHours(role)),breakage:"0",bonus:"0"}]};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setAssignDay(d,next);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(act==="delRow"){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const role=t.getAttribute("data-role");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const idx=Number(t.getAttribute("data-idx"));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const d=state.activeDay;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(!d) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ensureDay(d);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const day=state.asgn[d];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const arr=(day[role]||[]).slice();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>if(idx&gt;=0 &amp;&amp; idx&lt;arr.length) arr.splice(idx,1);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setAssignDay(d,{...day,[role]:arr});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>el.addEventListener("change",(e)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const t=e.target;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(!(t instanceof HTMLElement)) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("select[data-act='setYear']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.year=Number(t.value);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>loadMonth(key());</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("select[data-act='setMonth']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.month=Number(t.value);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>loadMonth(key());</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("select[data-act='setRow']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const role=t.getAttribute("data-role");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const idx=Number(t.getAttribute("data-idx"));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const field=t.getAttribute("data-field");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const d=state.activeDay; if(!d) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ensureDay(d);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const day=state.asgn[d];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const arr=(day[role]||[]).slice();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const row={...arr[idx],[field]:t.value};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>arr[idx]=row;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setAssignDay(d,{...day,[role]:arr});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>el.addEventListener("input",(e)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>const t=e.target;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(!(t instanceof HTMLElement)) return;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setDayRevenue']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const d=state.activeDay; if(!d) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.rev={...state.rev,[d]:t.value};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderKeepFocus();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setRate']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const tier=t.getAttribute("data-tier");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const key2=t.getAttribute("data-key");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const r=normalizeRates(state.rates);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>r[tier][key2]=t.value;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.rates=r;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setInvA']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const k=t.getAttribute("data-key");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const inv=normalizeInv(state.inv);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>inv.admin[k]=t.value;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.inv=inv;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setInvK']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const inv=normalizeInv(state.inv);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>inv.km.tobacco=t.value;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.inv=inv;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setAdvance']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const name=t.getAttribute("data-name");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const adv=normalizeAdv(state.adv);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>adv[name]=t.value;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.adv=adv;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setAdminSalary']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const name=t.getAttribute("data-name");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const sal=normalizeAdminSalary(state.adminSalary);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>sal[name]=t.value;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.adminSalary=sal;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setSeniorKm']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.seniorKm=t.value;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setManager']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const k=t.getAttribute("data-key");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.manager={...state.manager,[k]:t.value};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>scheduleSave();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(t.matches("input[data-act='setRow']")){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const role=t.getAttribute("data-role");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const idx=Number(t.getAttribute("data-idx"));</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const field=t.getAttribute("data-field");</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const d=state.activeDay; if(!d) return;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>ensureDay(d);</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const day=state.asgn[d];</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const arr=(day[role]||[]).slice();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>const row={...arr[idx],[field]:t.value};</p>
+<p class="p1"><span class="Apple-converted-space">      </span>arr[idx]=row;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>setAssignDay(d,{...day,[role]:arr});</p>
+<p class="p1"><span class="Apple-converted-space">      </span>renderKeepFocus();</p>
+<p class="p1"><span class="Apple-converted-space">      </span>return;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>window.addEventListener("keydown",(e)=&gt;{</p>
+<p class="p1"><span class="Apple-converted-space">    </span>if(e.key==="Escape" &amp;&amp; state.activeDay!=null){</p>
+<p class="p1"><span class="Apple-converted-space">      </span>state.activeDay=null;</p>
+<p class="p1"><span class="Apple-converted-space">      </span>render();</p>
+<p class="p1"><span class="Apple-converted-space">    </span>}</p>
+<p class="p1"><span class="Apple-converted-space">  </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">  </span>loadMonth(key());</p>
+<p class="p1">})();</p>
+<p class="p1">&lt;/script&gt;</p>
+</body>
+</html>
