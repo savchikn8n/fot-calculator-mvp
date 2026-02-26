@@ -153,13 +153,14 @@
     tier2:{admin:"7.5",km_main:"9",km_support:"6",km_support2:"6"},
     tier3:{admin:"6.5",km_main:"8",km_support:"5",km_support2:"5"},
   };
-  const WEEKDAYS=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+  const WEEKDAYS=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
   const STORAGE_KEY="tilda:fot:store:v15";
   const THEME_KEY="tilda:fot:theme:v1";
 
   const pad2=n=>String(n).padStart(2,"0");
   const monthKey=(y,m)=>`${y}-${pad2(m+1)}`;
-  const wd=d=>WEEKDAYS[d]||"";
+  const monIdx=d=>(d+6)%7;
+  const wd=d=>WEEKDAYS[monIdx(d)]||"";
   const numStr=x=>String(x??"").trim().split("").map(ch=>ch===","
     ?".":(ch==="₽"?"":ch)).join("").replace(/[^0-9.\-]/g,"");
   const n0=x=>{const v=Number(numStr(x));return Number.isFinite(v)?Math.max(0,v):0;};
@@ -435,7 +436,7 @@
 
     const cal=(()=>{
       const fd=new Date(state.year,state.month,1);
-      const start=fd.getDay();
+      const start=monIdx(fd.getDay());
       const total=Math.ceil((start+days)/7)*7;
       let h=`<div class="card"><div class="card-h"><div><div class="t">Календарь</div><div class="st">Клик по дню — открыть редактор</div></div></div><div class="card-b">`;
       h+=`<div class="cal-head">${WEEKDAYS.map(w=>`<div>${w}</div>`).join("")}</div>`;
