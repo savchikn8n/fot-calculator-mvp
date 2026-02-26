@@ -385,7 +385,8 @@
       fotNet+=gross-br;
     }
     const bonusSum=[...new Set([...ADMINS,...KMS])].reduce((a,name)=>a+Math.max(0,m0(state.bonus[name])),0);
-    fotNet+=bonusSum;
+    const managerPay=(revenue*n0(state.manager.percent)/100)+Math.max(0,m0(state.manager.seniorBonus));
+    fotNet+=bonusSum+managerPay;
     return{revenue,fotNet};
   };
 
