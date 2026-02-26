@@ -283,8 +283,49 @@
     password:"",
     readOnly:false,
     confirmClear:false,
+    scheduleText:"",
+    scheduleStatus:"",
+    scheduleError:"",
   };
   const canEdit=()=>!state.readOnly;
+  const NAME_ALIASES={
+    "леня":"Леонид",
+    "лёня":"Леонид",
+    "леонид":"Леонид",
+    "рудик":"Рудольф",
+    "рудольф":"Рудольф",
+    "юра":"Юра",
+    "женя":"Женя",
+    "крис":"Кристина",
+    "кристина":"Кристина",
+    "миша":"Михаил",
+    "михаил":"Михаил",
+    "дарья":"Дарья",
+    "даша":"Дарья",
+  };
+
+  const cleanName=s=>String(s||"").trim().toLowerCase().replace(/\./g,"").replace(/ё/g,"е");
+  const normalizePerson=(raw, list)=>{
+    const k=cleanName(raw);
+    const ali=NAME_ALIASES[k];
+    if(ali && list.includes(ali)) return ali;
+    const hit=list.find(x=>cleanName(x)===k);
+    return hit||null;
+  };
+
+  const normalizeMonthData=d=>({
+    rev:(d&&d.rev)||{},
+    unpaid:(d&&d.unpaid)||{},
+    asgn:(d&&d.asgn)||{},
+    adv:normalizeAdv(d&&d.adv),
+    bonus:normalizeBonus(d&&d.bonus),
+    inv:normalizeInv(d&&d.inv),
+    rates:normalizeRates(d&&d.rates),
+    manager:{percent:String(((d&&d.manager)||{}).percent??""),seniorBonus:String(((d&&d.manager)||{}).seniorBonus??"")},
+    adminSalary:normalizeAdminSalary(d&&d.adminSalary),
+    seniorKm:String((d&&d.seniorKm)??""),
+    dayComment:normalizeDayTextMap(d&&d.dayComment),
+  });
 
   const tierFrom=r=>r>=70000?{id:"tier3",name:"≥ 70 000"}:r>=50000?{id:"tier2",name:"50 000–69 999"}:{id:"tier1",name:"< 50 000"};
 
@@ -797,6 +838,14 @@
       h+=`<div class="pill ${state.theme==="light"?"on":"off"}" data-act="setTheme" data-theme="light">Светлая</div>`;
       h+=`</div>`;
       h+=`</div></div>`;
+
+      h+=`<div class="card" style="margin-top:12px"><div class="card-h"><div><div class="t">Импорт графика</div><div class="st">Вставь недельный график и распредели смены автоматически</div></div></div><div class="card-b">`;
+      h+=`<div class="row">`;
+      h+=`<textarea class="ta" data-act="setScheduleText" placeholder="23.2.2026\nПн\nЛеня/Рудик/Крис">${html(state.scheduleText||"")}</textarea>`;
+      h+=`<button class="btn primary" data-act="applySchedule" ${state.readOnly?"disabled":""}>Применить в календарь</button>`;
+      if(state.scheduleStatus) h+=`<div class="hint" style="color:#16a34a">${html(state.scheduleStatus)}</div>`;
+      if(state.scheduleError) h+=`<div class="hint" style="color:#ef4444">${html(state.scheduleError)}</div>`;
+      h+=`</div></div></div>`;
       return h;
     })();
 
@@ -883,6 +932,7 @@
     if(state.readOnly){
       const selectors=[
         "button[data-act='clearMonth']",
+        "button[data-act='applySchedule']",
         "button[data-act='addRow']",
         "button[data-act='delRow']",
         "input[data-act='setDayRevenue']",
@@ -897,7 +947,8 @@
         "input[data-act='setManager']",
         "input[data-act='setRow']",
         "select[data-act='setRow']",
-        "textarea[data-act='setDayComment']"
+        "textarea[data-act='setDayComment']",
+        "textarea[data-act='setScheduleText']"
       ];
       selectors.forEach(sel=>{
         el.querySelectorAll(sel).forEach(node=>{
@@ -987,6 +1038,82 @@
     });
   };
 
+  const parseScheduleText=text=>{
+    const chunks=String(text||"").replace(/\r/g,"").split(/\n\s*\n+/).map(x=>x.trim()).filter(Boolean);
+    const items=[];
+    const errs=[];
+    chunks.forEach((chunk,idx)=>{
+      const lines=chunk.split("\n").map(x=>x.trim()).filter(Boolean);
+      if(lines.length<3){
+        errs.push(`Блок ${idx+1}: недостаточно строк`);
+        return;
+      }
+      const m=lines[0].match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+      if(!m){
+        errs.push(`Блок ${idx+1}: неверная дата "${lines[0]}"`);
+        return;
+      }
+      const d=Number(m[1]), mo=Number(m[2]), yRaw=Number(m[3]);
+      const y=yRaw<100?2000+yRaw:yRaw;
+      const dt=new Date(y,mo-1,d);
+      if(dt.getFullYear()!==y || dt.getMonth()!==mo-1 || dt.getDate()!==d){
+        errs.push(`Блок ${idx+1}: несуществующая дата "${lines[0]}"`);
+        return;
+      }
+      const names=(lines[2]||"").split("/").map(x=>x.trim()).filter(Boolean);
+      const fs=isFriSat(dt);
+      const need=fs?4:3;
+      if(names.length<need){
+        errs.push(`Блок ${idx+1}: нужно ${need} имени(имён), получено ${names.length}`);
+        return;
+      }
+      const kmMain=normalizePerson(names[0],KMS);
+      const kmSupport=normalizePerson(names[1],KMS);
+      const admin=normalizePerson(names[fs?3:2],ADMINS);
+      const kmSupport2=fs?normalizePerson(names[2],KMS):null;
+      if(!kmMain || !kmSupport || !admin || (fs && !kmSupport2)){
+        errs.push(`Блок ${idx+1}: не удалось распознать имена`);
+        return;
+      }
+      items.push({
+        date:dt,
+        assign:{
+          admin:[{name:admin,hours:String(defHours("admin",dt)),breakage:""}],
+          km_main:[{name:kmMain,hours:String(defHours("km_main",dt)),breakage:""}],
+          km_support:[{name:kmSupport,hours:String(defHours("km_support",dt)),breakage:""}],
+          km_support2:fs?[{name:kmSupport2,hours:String(defHours("km_support2",dt)),breakage:""}]:[],
+        }
+      });
+    });
+    return{items,errs};
+  };
+
+  const applyScheduleImport=()=>{
+    if(!canEdit()) return;
+    const parsed=parseScheduleText(state.scheduleText);
+    if(parsed.items.length===0){
+      state.scheduleError=parsed.errs[0]||"Не удалось распознать график";
+      state.scheduleStatus="";
+      render();
+      return;
+    }
+    const nextStore={...cloud.store,months:{...(cloud.store.months||{})}};
+    parsed.items.forEach(item=>{
+      const dt=item.date;
+      const mk=monthKey(dt.getFullYear(),dt.getMonth());
+      const md=normalizeMonthData(nextStore.months[mk]);
+      md.asgn={...md.asgn,[dt.getDate()]:item.assign};
+      nextStore.months[mk]=md;
+    });
+    cloud.store=nextStore;
+    if(cloud.enabled) cloudSave(nextStore);
+    else safeSet(nextStore);
+    loadMonth(key());
+    state.scheduleError=parsed.errs.length?`Импорт с предупреждениями: ${parsed.errs[0]}`:"";
+    state.scheduleStatus=`Импортировано: ${parsed.items.length}`;
+    render();
+  };
+
   window.addEventListener("message",(ev)=>{
     if(ev.origin!==window.location.origin) return;
     const d=ev.data;
@@ -1031,7 +1158,7 @@
       return;
     }
 
-    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear"].includes(act)) return;
+    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear","applySchedule"].includes(act)) return;
 
     if(act==="setView"){
       state.view=t.getAttribute("data-view");
@@ -1059,6 +1186,10 @@
       state.rev={}; state.unpaid={}; state.asgn={}; state.dayComment={}; state.activeDay=null; state.confirmClear=false;
       scheduleSave();
       render();
+      return;
+    }
+    if(act==="applySchedule"){
+      applyScheduleImport();
       return;
     }
     if(act==="openDay"){
@@ -1148,6 +1279,10 @@
       state.password=t.value;
       return;
     }
+    if(t.matches("textarea[data-act='setScheduleText']")){
+      state.scheduleText=t.value;
+      return;
+    }
 
     if(state.readOnly && (
       t.matches("input[data-act='setDayRevenue']") ||
@@ -1161,7 +1296,8 @@
       t.matches("input[data-act='setSeniorKm']") ||
       t.matches("input[data-act='setManager']") ||
       t.matches("input[data-act='setRow']") ||
-      t.matches("textarea[data-act='setDayComment']")
+      t.matches("textarea[data-act='setDayComment']") ||
+      t.matches("textarea[data-act='setScheduleText']")
     )) return;
 
     if(t.matches("input[data-act='setDayRevenue']")){
