@@ -17,6 +17,20 @@ create table if not exists public.workspace_states (
   updated_at timestamptz not null default now()
 );
 
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'workspace_states'
+  ) then
+    alter publication supabase_realtime add table public.workspace_states;
+  end if;
+end
+$$;
+
 create or replace function public.is_workspace_member(p_workspace_id text, p_user_id uuid)
 returns boolean
 language sql

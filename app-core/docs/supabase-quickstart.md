@@ -27,6 +27,11 @@ npm run dev
 - `role = editor` can edit
 - `role = viewer` read only
 
+8. Create users in Supabase Auth:
+- Authentication -> Users -> `Create new user`
+- then put user ids into `workspace_members`
+- without row in `workspace_members`, workspace opens in read-only mode
+
 Next phase after this quickstart:
 - add login UI in `public/legacy/index.html`
 - load/save workspace state to `workspace_states`

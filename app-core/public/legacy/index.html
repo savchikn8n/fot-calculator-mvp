@@ -138,7 +138,7 @@
   .pSub{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums;margin-top:4px}
   .hint{font-size:11px;color:var(--text-muted);margin-top:10px}
 </style>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
   const el=document.getElementById("fot-app");
@@ -156,6 +156,7 @@
   const WEEKDAYS=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
   const STORAGE_KEY="tilda:fot:store:v15";
   const THEME_KEY="tilda:fot:theme:v1";
+  const CONFIG_WAIT_MS=120;
 
   const pad2=n=>String(n).padStart(2,"0");
   const monthKey=(y,m)=>`${y}-${pad2(m+1)}`;
@@ -237,6 +238,22 @@
   const safeSet=obj=>{try{localStorage.setItem(STORAGE_KEY,JSON.stringify(obj));}catch(e){}};
   const safeGetTheme=()=>{try{const t=localStorage.getItem(THEME_KEY);return t==="light"?"light":"dark";}catch(e){return"dark";}};
   const safeSetTheme=t=>{try{localStorage.setItem(THEME_KEY,t);}catch(e){}};
+  const getCfg=()=>window.__FOT_CFG__&&typeof window.__FOT_CFG__==="object"?window.__FOT_CFG__:{};
+
+  const cloud={
+    started:false,
+    enabled:false,
+    authReady:false,
+    viewOnlyForced:false,
+    role:"viewer",
+    workspaceId:"default",
+    supabase:null,
+    session:null,
+    saveSeq:0,
+    ignoreNextRealtime:0,
+    channel:null,
+    store:{months:{}},
+  };
 
   const state={
     view:"dashboard",
@@ -258,7 +275,14 @@
     hydrating:false,
     saveTimer:null,
     theme:safeGetTheme(),
+    authLoading:true,
+    authBusy:false,
+    authError:"",
+    email:"",
+    password:"",
+    readOnly:false,
   };
+  const canEdit=()=>!state.readOnly;
 
   const tierFrom=r=>r>=70000?{id:"tier3",name:"≥ 70 000"}:r>=50000?{id:"tier2",name:"50 000–69 999"}:{id:"tier1",name:"< 50 000"};
 
@@ -290,20 +314,11 @@
   const dim=()=>new Date(state.year,state.month+1,0).getDate();
   const key=()=>monthKey(state.year,state.month);
   const dayRevenueTotal=d=>n0(state.rev[d])+n0(state.unpaid[d]);
+  const emptyStore=()=>({months:{}});
 
-  const getDay=(d,dt)=>state.asgn[d]||defDay(dt);
-
-  const scheduleSave=()=>{
-    if(state.hydrating) return;
-    if(state.saveTimer) clearTimeout(state.saveTimer);
-    state.saveTimer=setTimeout(saveNow,200);
-  };
-  const saveNow=()=>{
-    if(state.hydrating) return;
+  const toStoreSnapshot=()=>{
     const k=key();
-    if(state.loadedKey!==k) return;
-    const store=safeGet();
-    const next={...store,months:{...(store.months||{})}};
+    const next={...cloud.store,months:{...(cloud.store.months||{})}};
     next.months[k]={
       rev:state.rev,
       unpaid:state.unpaid,
@@ -317,12 +332,159 @@
       seniorKm:state.seniorKm,
       dayComment:normalizeDayTextMap(state.dayComment)
     };
-    safeSet(next);
+    return next;
+  };
+
+  const cloudSave=async(nextStore)=>{
+    if(!cloud.enabled || !cloud.supabase || !cloud.session || !canEdit()) return;
+    cloud.saveSeq+=1;
+    const seq=cloud.saveSeq;
+    cloud.ignoreNextRealtime+=1;
+    const {error}=await cloud.supabase.from("workspace_states").upsert({
+      workspace_id:cloud.workspaceId,
+      data:nextStore,
+      updated_at:new Date().toISOString()
+    },{onConflict:"workspace_id"});
+    if(error){
+      if(seq===cloud.saveSeq){
+        state.authError=`Ошибка сохранения: ${error.message}`;
+        render();
+      }
+      cloud.ignoreNextRealtime=Math.max(0,cloud.ignoreNextRealtime-1);
+    }
+  };
+
+  const subscribeRealtime=()=>{
+    if(!cloud.enabled || !cloud.supabase) return;
+    if(cloud.channel) cloud.supabase.removeChannel(cloud.channel);
+    cloud.channel=cloud.supabase.channel(`workspace:${cloud.workspaceId}`);
+    cloud.channel.on("postgres_changes",{
+      event:"UPDATE",
+      schema:"public",
+      table:"workspace_states",
+      filter:`workspace_id=eq.${cloud.workspaceId}`
+    },payload=>{
+      if(cloud.ignoreNextRealtime>0){
+        cloud.ignoreNextRealtime-=1;
+        return;
+      }
+      const incoming=payload&&payload.new&&payload.new.data;
+      cloud.store=(incoming&&typeof incoming==="object")?incoming:emptyStore();
+      if(state.loadedKey){
+        loadMonth(key());
+      }
+    }).subscribe();
+  };
+
+  const fetchRole=async(userId)=>{
+    const {data,error}=await cloud.supabase.from("workspace_members")
+      .select("role")
+      .eq("workspace_id",cloud.workspaceId)
+      .eq("user_id",userId)
+      .maybeSingle();
+    if(error) throw error;
+    return data&&data.role==="editor"?"editor":"viewer";
+  };
+
+  const fetchStore=async()=>{
+    const {data,error}=await cloud.supabase.from("workspace_states")
+      .select("data")
+      .eq("workspace_id",cloud.workspaceId)
+      .maybeSingle();
+    if(error) throw error;
+    if(!data){
+      if(canEdit()){
+        const init=emptyStore();
+        const {error:insErr}=await cloud.supabase.from("workspace_states").insert({workspace_id:cloud.workspaceId,data:init});
+        if(insErr) throw insErr;
+        return init;
+      }
+      return emptyStore();
+    }
+    return (data.data&&typeof data.data==="object")?data.data:emptyStore();
+  };
+
+  const hydrateBySession=async(session)=>{
+    cloud.session=session;
+    state.authError="";
+    state.authLoading=true;
+    render();
+    const user=session&&session.user;
+    if(!user){
+      state.authLoading=false;
+      render();
+      return;
+    }
+    try{
+      cloud.role=await fetchRole(user.id);
+      state.readOnly=cloud.viewOnlyForced || cloud.role!=="editor";
+      cloud.store=await fetchStore();
+      state.authLoading=false;
+      loadMonth(key());
+      if(cloud.enabled) subscribeRealtime();
+    }catch(err){
+      state.authLoading=false;
+      state.authError=err&&err.message?err.message:"Не удалось загрузить рабочее пространство";
+      render();
+    }
+  };
+
+  const initCloud=async()=>{
+    if(cloud.started) return;
+    cloud.started=true;
+    const cfg=getCfg();
+    cloud.workspaceId=String(cfg.workspaceId||"default");
+    cloud.viewOnlyForced=!!cfg.viewOnly;
+    const supabaseUrl=String(cfg.supabaseUrl||"");
+    const supabaseAnonKey=String(cfg.supabaseAnonKey||"");
+    if(!supabaseUrl || !supabaseAnonKey || !window.supabase || !window.supabase.createClient){
+      cloud.enabled=false;
+      cloud.store=safeGet();
+      state.readOnly=cloud.viewOnlyForced;
+      state.authLoading=false;
+      loadMonth(key());
+      return;
+    }
+    cloud.enabled=true;
+    cloud.supabase=window.supabase.createClient(supabaseUrl,supabaseAnonKey);
+    const {data:{session},error}=await cloud.supabase.auth.getSession();
+    if(error){
+      state.authError=error.message;
+      state.authLoading=false;
+      render();
+      return;
+    }
+    if(!session){
+      state.authLoading=false;
+      render();
+      return;
+    }
+    await hydrateBySession(session);
+  };
+
+  const getDay=(d,dt)=>state.asgn[d]||defDay(dt);
+
+  const scheduleSave=()=>{
+    if(state.hydrating) return;
+    if(state.saveTimer) clearTimeout(state.saveTimer);
+    state.saveTimer=setTimeout(saveNow,200);
+  };
+  const saveNow=()=>{
+    if(state.hydrating) return;
+    const k=key();
+    if(state.loadedKey!==k) return;
+    const next=toStoreSnapshot();
+    cloud.store=next;
+    if(cloud.enabled){
+      cloudSave(next);
+    }else{
+      safeSet(next);
+    }
   };
 
   const loadMonth=(k)=>{
     state.hydrating=true;
-    const store=safeGet();
+    const store=cloud.store&&typeof cloud.store==="object"?cloud.store:emptyStore();
     const d=store.months&&store.months[k];
     if(!d){
       state.rev={};
@@ -435,6 +597,18 @@
     const pageBg=state.theme==="light"?"#f5f7fb":"#09090b";
     document.body.style.background=pageBg;
     document.documentElement.style.background=pageBg;
+
+    if(state.authLoading){
+      el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="card"><div class="card-h"><div><div class="t">FOT</div><div class="st">Загрузка данных...</div></div></div></div></div></div>`;
+      return;
+    }
+
+    if(cloud.enabled && !cloud.session){
+      const err=state.authError?`<div class="hint" style="color:#ef4444;margin-top:8px">${html(state.authError)}</div>`:"";
+      const busy=state.authBusy?"disabled":"";
+      el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="card"><div class="card-h"><div><div class="t">Вход</div><div class="st">Авторизуйся, чтобы открыть рабочее пространство</div></div></div><div class="card-b"><div class="row"><input class="inp" placeholder="Email" data-act="authEmail" value="${html(state.email)}"><input class="inp" placeholder="Пароль" type="password" data-act="authPassword" value="${html(state.password)}"><button class="btn primary" data-act="signIn" ${busy}>Войти</button>${err}</div></div></div></div></div>`;
+      return;
+    }
 
     const days=dim();
     const mk=key();
@@ -591,7 +765,12 @@
     const sidebar=(()=>{
       const now=new Date();
       const yopts=Array.from({length:8}).map((_,i)=>now.getFullYear()-4+i);
+      const modeTxt=state.readOnly?"Просмотр":"Редактор";
       let h=`<div class="card"><div class="card-h"><div><div class="t">ФОТ-калькулятор (Все Свои)</div><div class="st">Выручка: ${html(money(mt.revenue))} · ФОТ: ${html(money(mt.fotNet))}</div></div><div class="chip">${mk}</div></div><div class="card-b">`;
+      h+=`<div class="row2" style="margin-bottom:10px">`;
+      h+=`<div class="chip">Режим: ${modeTxt}</div>`;
+      h+=cloud.enabled?`<button class="btn ghost" data-act="signOut">Выйти</button>`:`<div></div>`;
+      h+=`</div>`;
       h+=`<div class="row2">`;
       h+=`<select class="sel" data-act="setYear">${yopts.map(y=>`<option value="${y}" ${y===state.year?"selected":""}>${y}</option>`).join("")}</select>`;
       h+=`<select class="sel" data-act="setMonth">${MONTHS.map((m,i)=>`<option value="${i}" ${i===state.month?"selected":""}>${html(m)}</option>`).join("")}</select>`;
@@ -605,7 +784,7 @@
       h+=`<div class="pill ${state.theme==="dark"?"on":"off"}" data-act="setTheme" data-theme="dark">Тёмная</div>`;
       h+=`<div class="pill ${state.theme==="light"?"on":"off"}" data-act="setTheme" data-theme="light">Светлая</div>`;
       h+=`</div>`;
-      h+=`<div style="margin-top:14px"><button class="btn primary" style="width:100%" data-act="clearMonth">Очистить месяц</button></div>`;
+      h+=`<div style="margin-top:14px"><button class="btn primary" style="width:100%" data-act="clearMonth" ${state.readOnly?"disabled":""}>Очистить месяц</button></div>`;
       h+=`</div></div>`;
 
       h+=`<div class="legend"><div class="t">Легенда тарифов</div>`;
@@ -613,7 +792,7 @@
       h+=`<div class="lg"><div><span class="dot" style="background:rgba(244,63,94,.65)"></span>&lt; 50 000</div><div class="muted">красный</div></div>`;
       h+=`<div class="lg"><div><span class="dot" style="background:rgba(245,158,11,.65)"></span>50 000–69 999</div><div class="muted">жёлтый</div></div>`;
       h+=`<div class="lg"><div><span class="dot" style="background:rgba(16,185,129,.65)"></span>≥ 70 000</div><div class="muted">зелёный</div></div>`;
-      h+=`</div><div class="hint">Сохранение: localStorage (по месяцам).</div></div>`;
+      h+=`</div><div class="hint">Сохранение: ${cloud.enabled?"Supabase (workspace)":"localStorage"}.</div></div>`;
       return h;
     })();
 
@@ -691,6 +870,31 @@
     })();
 
     el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}</div>`;
+    if(state.readOnly){
+      const selectors=[
+        "button[data-act='clearMonth']",
+        "button[data-act='addRow']",
+        "button[data-act='delRow']",
+        "input[data-act='setDayRevenue']",
+        "input[data-act='setDayUnpaid']",
+        "input[data-act='setRate']",
+        "input[data-act='setInvA']",
+        "input[data-act='setInvK']",
+        "input[data-act='setAdvance']",
+        "input[data-act='setBonus']",
+        "input[data-act='setAdminSalary']",
+        "input[data-act='setSeniorKm']",
+        "input[data-act='setManager']",
+        "input[data-act='setRow']",
+        "select[data-act='setRow']",
+        "textarea[data-act='setDayComment']"
+      ];
+      selectors.forEach(sel=>{
+        el.querySelectorAll(sel).forEach(node=>{
+          if("disabled" in node) node.disabled=true;
+        });
+      });
+    }
   }
 
   function renderKeepFocus(){
@@ -745,6 +949,28 @@
     if(!state.asgn[day]) state.asgn={...state.asgn,[day]:defDay(dt)};
   }
 
+  const tryInitCloud=()=>{
+    initCloud().catch(err=>{
+      state.authLoading=false;
+      state.authError=err&&err.message?err.message:"Ошибка инициализации";
+      render();
+    });
+  };
+
+  window.addEventListener("message",(ev)=>{
+    if(ev.origin!==window.location.origin) return;
+    const d=ev.data;
+    if(!d || d.type!=="FOT_CONFIG") return;
+    window.__FOT_CFG__={
+      supabaseUrl:String(d.supabaseUrl||""),
+      supabaseAnonKey:String(d.supabaseAnonKey||""),
+      workspaceId:String(d.workspaceId||"default"),
+      viewOnly:!!d.viewOnly
+    };
+    if(cloud.started && !cloud.enabled) cloud.started=false;
+    tryInitCloud();
+  });
+
   el.addEventListener("click",(e)=>{
     if(state.activeDay!=null){
       const trg=e.target;
@@ -758,6 +984,40 @@
     const t=e.target.closest("[data-act]");
     if(!t) return;
     const act=t.getAttribute("data-act");
+
+    if(act==="signIn"){
+      if(!cloud.enabled || !cloud.supabase || state.authBusy) return;
+      state.authBusy=true;
+      state.authError="";
+      render();
+      cloud.supabase.auth.signInWithPassword({
+        email:String(state.email||"").trim(),
+        password:String(state.password||"")
+      }).then(async({data,error})=>{
+        state.authBusy=false;
+        if(error){
+          state.authError=error.message;
+          render();
+          return;
+        }
+        state.password="";
+        await hydrateBySession(data&&data.session?data.session:null);
+      });
+      return;
+    }
+    if(act==="signOut"){
+      if(!cloud.enabled || !cloud.supabase) return;
+      cloud.supabase.auth.signOut().then(()=>{
+        cloud.session=null;
+        cloud.role="viewer";
+        state.readOnly=true;
+        state.activeDay=null;
+        render();
+      });
+      return;
+    }
+
+    if(state.readOnly && ["clearMonth","addRow","delRow"].includes(act)) return;
 
     if(act==="setView"){
       state.view=t.getAttribute("data-view");
@@ -824,6 +1084,7 @@
   el.addEventListener("change",(e)=>{
     const t=e.target;
     if(!(t instanceof HTMLElement)) return;
+    if(state.readOnly && t.matches("select[data-act='setRow']")) return;
 
     if(t.matches("select[data-act='setYear']")){
       state.year=Number(t.value);
@@ -854,6 +1115,30 @@
   el.addEventListener("input",(e)=>{
     const t=e.target;
     if(!(t instanceof HTMLElement)) return;
+
+    if(t.matches("input[data-act='authEmail']")){
+      state.email=t.value;
+      return;
+    }
+    if(t.matches("input[data-act='authPassword']")){
+      state.password=t.value;
+      return;
+    }
+
+    if(state.readOnly && (
+      t.matches("input[data-act='setDayRevenue']") ||
+      t.matches("input[data-act='setDayUnpaid']") ||
+      t.matches("input[data-act='setRate']") ||
+      t.matches("input[data-act='setInvA']") ||
+      t.matches("input[data-act='setInvK']") ||
+      t.matches("input[data-act='setAdvance']") ||
+      t.matches("input[data-act='setBonus']") ||
+      t.matches("input[data-act='setAdminSalary']") ||
+      t.matches("input[data-act='setSeniorKm']") ||
+      t.matches("input[data-act='setManager']") ||
+      t.matches("input[data-act='setRow']") ||
+      t.matches("textarea[data-act='setDayComment']")
+    )) return;
 
     if(t.matches("input[data-act='setDayRevenue']")){
       const d=state.activeDay; if(!d) return;
@@ -966,7 +1251,7 @@
     }
   });
 
-  loadMonth(key());
+  setTimeout(tryInitCloud,CONFIG_WAIT_MS);
 })();
 </script>
 </body>
