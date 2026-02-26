@@ -82,6 +82,8 @@
   .btn.ghost{background:var(--surface-2);color:var(--text-soft)}
   .sel,.inp{width:100%;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text-strong);padding:10px 12px;font-size:13px;outline:none}
   .inp{text-align:right}
+  .ta{width:100%;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text-strong);padding:10px 12px;font-size:13px;outline:none;resize:vertical;min-height:88px;line-height:1.35}
+  .ta:focus{box-shadow:0 0 0 2px var(--focus-ring)}
   .sel:focus,.inp:focus{box-shadow:0 0 0 2px var(--focus-ring)}
   .legend{border:1px solid var(--border);background:var(--surface-2);border-radius:24px;padding:18px}
   .lg{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-soft)}
@@ -194,12 +196,24 @@
     ADMINS.forEach(n=>base[n]=String(src[n]??""));
     return base;
   };
+  const normalizeBonus=bn=>{
+    const base={}; [...ADMINS,...KMS].forEach(n=>base[n]="");
+    const src=bn&&typeof bn==="object"?bn:{};
+    Object.keys(base).forEach(n=>base[n]=String(src[n]??""));
+    return base;
+  };
+  const normalizeDayTextMap=x=>{
+    const src=x&&typeof x==="object"?x:{};
+    const out={};
+    Object.keys(src).forEach(k=>out[k]=String(src[k]??""));
+    return out;
+  };
 
   const defDay=dt=>({
-    admin:[{name:ADMINS[0],hours:String(defHours("admin")),breakage:"0",bonus:"0"}],
-    km_main:[{name:KMS[0],hours:String(defHours("km_main")),breakage:"0",bonus:"0"}],
-    km_support:[{name:KMS[0],hours:String(defHours("km_support")),breakage:"0",bonus:"0"}],
-    km_support2:isFriSat(dt)?[{name:KMS[0],hours:String(defHours("km_support2")),breakage:"0",bonus:"0"}]:[],
+    admin:[{name:ADMINS[0],hours:String(defHours("admin")),breakage:"0"}],
+    km_main:[{name:KMS[0],hours:String(defHours("km_main")),breakage:"0"}],
+    km_support:[{name:KMS[0],hours:String(defHours("km_support")),breakage:"0"}],
+    km_support2:isFriSat(dt)?[{name:KMS[0],hours:String(defHours("km_support2")),breakage:"0"}]:[],
   });
 
   const alloc=(total,rows)=>{
@@ -221,13 +235,16 @@
     year:(new Date()).getFullYear(),
     month:(new Date()).getMonth(),
     rev:{},
+    unpaid:{},
     asgn:{},
     adv:normalizeAdv(null),
+    bonus:normalizeBonus(null),
     inv:normalizeInv(null),
     rates:normalizeRates(null),
     manager:{percent:"",seniorBonus:""},
     adminSalary:normalizeAdminSalary(null),
     seniorKm:"",
+    dayComment:{},
     activeDay:null,
     loadedKey:null,
     hydrating:false,
@@ -264,6 +281,7 @@
 
   const dim=()=>new Date(state.year,state.month+1,0).getDate();
   const key=()=>monthKey(state.year,state.month);
+  const dayRevenueTotal=d=>n0(state.rev[d])+n0(state.unpaid[d]);
 
   const getDay=(d,dt)=>state.asgn[d]||defDay(dt);
 
@@ -280,13 +298,16 @@
     const next={...store,months:{...(store.months||{})}};
     next.months[k]={
       rev:state.rev,
+      unpaid:state.unpaid,
       asgn:state.asgn,
       adv:state.adv,
+      bonus:state.bonus,
       inv:normalizeInv(state.inv),
       rates:normalizeRates(state.rates),
       manager:state.manager,
       adminSalary:state.adminSalary,
-      seniorKm:state.seniorKm
+      seniorKm:state.seniorKm,
+      dayComment:normalizeDayTextMap(state.dayComment)
     };
     safeSet(next);
   };
@@ -297,13 +318,16 @@
     const d=store.months&&store.months[k];
     if(!d){
       state.rev={};
+      state.unpaid={};
       state.asgn={};
       state.adv=normalizeAdv(null);
+      state.bonus=normalizeBonus(null);
       state.inv=normalizeInv(null);
       state.rates=normalizeRates(null);
       state.manager={percent:"",seniorBonus:""};
       state.adminSalary=normalizeAdminSalary(null);
       state.seniorKm="";
+      state.dayComment={};
       state.activeDay=null;
       state.loadedKey=k;
       state.hydrating=false;
@@ -311,13 +335,16 @@
       return;
     }
     state.rev=d.rev||{};
+    state.unpaid=d.unpaid||{};
     state.asgn=d.asgn||{};
     state.adv=normalizeAdv(d.adv);
+    state.bonus=normalizeBonus(d.bonus);
     state.inv=normalizeInv(d.inv);
     state.rates=normalizeRates(d.rates);
     state.manager={percent:String((d.manager||{}).percent??""),seniorBonus:String((d.manager||{}).seniorBonus??"")};
     state.adminSalary=normalizeAdminSalary(d.adminSalary);
     state.seniorKm=String(d.seniorKm??"");
+    state.dayComment=normalizeDayTextMap(d.dayComment);
     state.activeDay=null;
     state.loadedKey=k;
     state.hydrating=false;
@@ -349,15 +376,16 @@
     const days=dim();
     for(let d=1; d<=days; d++){
       const dt=new Date(state.year,state.month,d);
-      const r=n0(state.rev[d]);
+      const r=dayRevenueTotal(d);
       revenue+=r;
       const a=getDay(d,dt);
       const {totals}=computeForDay(r,a);
       const br=sumField(a.admin,"breakage")+sumField(a.km_main,"breakage")+sumField(a.km_support,"breakage")+sumField(a.km_support2,"breakage");
-      const pr=sumField(a.admin,"bonus")+sumField(a.km_main,"bonus")+sumField(a.km_support,"bonus")+sumField(a.km_support2,"bonus");
       const gross=totals.admin+totals.km_main+totals.km_support+totals.km_support2;
-      fotNet+=gross+pr-br;
+      fotNet+=gross-br;
     }
+    const bonusSum=[...new Set([...ADMINS,...KMS])].reduce((a,name)=>a+Math.max(0,m0(state.bonus[name])),0);
+    fotNet+=bonusSum;
     return{revenue,fotNet};
   };
 
@@ -373,8 +401,7 @@
         const name=String((rr[i]&&rr[i].name)||"").trim();
         if(!name) continue;
         if(!target[name]) target[name]={gross:0,breakage:0};
-        const b=Math.max(0,m0(rr[i]&&rr[i].bonus));
-        target[name].gross+=(payouts[i]||0)+b;
+        target[name].gross+=(payouts[i]||0);
         target[name].breakage+=Math.max(0,m0(rr[i]&&rr[i].breakage));
       }
     };
@@ -382,7 +409,7 @@
     const days=dim();
     for(let d=1; d<=days; d++){
       const dt=new Date(state.year,state.month,d);
-      const r=n0(state.rev[d]);
+      const r=dayRevenueTotal(d);
       const a=state.asgn[d]||defDay(dt);
       const {totals}=computeForDay(r,a);
       add(totals.admin,a.admin,adminTotals);
@@ -416,7 +443,7 @@
         const d=i-start+1;
         if(d<1||d>days){ h+=`<div class="cell"></div>`; continue; }
         const dt=new Date(state.year,state.month,d);
-        const rev=n0(state.rev[d]);
+        const rev=dayRevenueTotal(d);
         const a=getDay(d,dt);
         const admins=uniqNames(a.admin).join(", ")||"—";
         const kms=uniqNames([...(a.km_main||[]),...(a.km_support||[]),...(a.km_support2||[])]).join(", ")||"—";
@@ -459,18 +486,20 @@
         const gross=(pt.adminTotals[name]||{}).gross||0;
         const boj=(pt.adminTotals[name]||{}).breakage||0;
         const adv=Math.max(0,m0(state.adv[name]));
+        const bonus=Math.max(0,m0(state.bonus[name]));
         const salary=Math.max(0,m0(state.adminSalary[name]));
-        const net=gross - boj - adv - adminShare + salary;
-        return{ name,gross,boj,adv,salary,net };
+        const net=gross - boj - adv + bonus - adminShare + salary;
+        return{ name,gross,boj,adv,bonus,salary,net };
       });
 
       const kmRows=KMS.map(name=>{
         const gross=(pt.kmTotals[name]||{}).gross||0;
         const boj=(pt.kmTotals[name]||{}).breakage||0;
         const adv=Math.max(0,m0(state.adv[name]));
+        const bonus=Math.max(0,m0(state.bonus[name]));
         const extra=(name==="Юра")?Math.max(0,m0(state.seniorKm)):0;
-        const net=gross - boj - adv - kmShare + extra;
-        return{ name,gross,boj,adv,extra,net };
+        const net=gross - boj - adv + bonus - kmShare + extra;
+        return{ name,gross,boj,adv,bonus,extra,net };
       });
 
       const sum=(arr,k)=>arr.reduce((a,r)=>a+(r[k]||0),0);
@@ -486,13 +515,14 @@
       h+=`</div></div></div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
-      h+=`<th style="width:28%">Сотр.</th><th class="r" style="width:16%">Нач.</th><th class="r" style="width:16%">Оклад</th><th class="r" style="width:14%">Бой</th><th class="r" style="width:14%">Аванс</th><th class="r" style="width:12%">Итог</th>`;
+      h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:14%">Нач.</th><th class="r" style="width:14%">Оклад</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:12%">Итог</th>`;
       h+=`</tr></thead><tbody>`;
       adminRows.forEach(r=>{
         h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdminSalary" data-name="${html(r.name)}" value="${html(state.adminSalary[r.name]||"")}"></td>`;
         h+=`<td class="r">${html(money(r.boj))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"></td>`;
+        h+=`<td class="r"><input class="inp miniIn" data-act="setBonus" data-name="${html(r.name)}" value="${html(state.bonus[r.name]||"")}"></td>`;
         h+=`<td class="r" style="font-weight:800">${html(money(r.net))}</td></tr>`;
       });
       h+=`</tbody><tfoot><tr><td>Итого</td>`;
@@ -500,6 +530,7 @@
       h+=`<td class="r">${html(money(sum(adminRows,"salary")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"boj")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"adv")))}</td>`;
+      h+=`<td class="r">${html(money(sum(adminRows,"bonus")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"net")))}</td></tr></tfoot></table></div></div>`;
 
       h+=`<div class="section"><div class="secTop"><div><div class="secT">Кальянные мастера</div><div class="secS">Инвентаризация: ${html(money(kmInv))} · по ${html(money(kmShare))}</div></div>`;
@@ -510,12 +541,13 @@
       h+=`</div></div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
-      h+=`<th style="width:28%">Сотр.</th><th class="r" style="width:18%">Нач.</th><th class="r" style="width:16%">Плюс</th><th class="r" style="width:14%">Бой</th><th class="r" style="width:14%">Аванс</th><th class="r" style="width:10%">Итог</th>`;
+      h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:16%">Нач.</th><th class="r" style="width:14%">Плюс</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:10%">Итог</th>`;
       h+=`</tr></thead><tbody>`;
       kmRows.forEach(r=>{
         h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td><td class="r">${html(money(r.extra))}</td>`;
         h+=`<td class="r">${html(money(r.boj))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"></td>`;
+        h+=`<td class="r"><input class="inp miniIn" data-act="setBonus" data-name="${html(r.name)}" value="${html(state.bonus[r.name]||"")}"></td>`;
         h+=`<td class="r" style="font-weight:800">${html(money(r.net))}</td></tr>`;
       });
       h+=`</tbody><tfoot><tr><td>Итого</td>`;
@@ -523,6 +555,7 @@
       h+=`<td class="r">${html(money(sum(kmRows,"extra")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"boj")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"adv")))}</td>`;
+      h+=`<td class="r">${html(money(sum(kmRows,"bonus")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"net")))}</td></tr></tfoot></table></div></div>`;
 
       h+=`</div></div></div>`;
@@ -589,7 +622,9 @@
       const open=state.activeDay!=null;
       const d=state.activeDay;
       const dt=open?new Date(state.year,state.month,d):null;
-      const rev=n0(open?state.rev[d]:0);
+      const revBase=n0(open?state.rev[d]:0);
+      const revUnpaid=n0(open?state.unpaid[d]:0);
+      const rev=revBase+revUnpaid;
       const assigns=open?getDay(d,dt):null;
       const c=open?computeForDay(rev, assigns):{tier:{id:"tier1",name:"< 50 000"},totals:{admin:0,km_main:0,km_support:0,km_support2:0}};
       const tier=c.tier, totals=c.totals;
@@ -598,8 +633,7 @@
         const rr=Array.isArray(rows)?rows:[];
         const payouts=alloc(total,rr);
         const br=rr.map(r=>Math.max(0,m0(r&&r.breakage)));
-        const bn=rr.map(r=>Math.max(0,m0(r&&r.bonus)));
-        const net=payouts.map((p,i)=>p-(br[i]||0)+(bn[i]||0));
+        const net=payouts.map((p,i)=>p-(br[i]||0));
 
         let h=`<div class="role" data-role="${roleKey}"><div class="roleTop"><div><div class="roleT">${html(title)}</div><div class="roleS">Сумма роли: ${html(money(total))}</div></div>`;
         h+=`<button class="add" data-act="addRow" data-role="${roleKey}">+ Добавить</button></div>`;
@@ -612,9 +646,8 @@
             people.map(p=>`<option value="${html(p)}" ${p===(r.name||"")?"selected":""}>${html(p)}</option>`).join("")+
             `</select></div>`;
           h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="hours" value="${html(r.hours??"")}"></div>`;
-          h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="bonus" value="${html(r.bonus??"0")}" placeholder="Премия"></div>`;
           h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"0")}" placeholder="Бой"></div>`;
-          h+=`<div class="col2 payout"><div class="pTop">${html(money(net[idx]||0))}</div><div class="pSub">${html(money(payouts[idx]||0))} + ${html(money(bn[idx]||0))} − ${html(money(br[idx]||0))}</div></div>`;
+          h+=`<div class="col4 payout"><div class="pTop">${html(money(net[idx]||0))}</div><div class="pSub">${html(money(payouts[idx]||0))} − ${html(money(br[idx]||0))}</div></div>`;
           h+=`</div>`;
         });
 
@@ -629,9 +662,11 @@
       h+=`<div class="dlgB">`;
 
       if(open){
-        h+=`<div class="section" style="margin-bottom:12px"><div class="muted" style="margin-bottom:6px">Выручка дня</div>`;
-        h+=`<input class="inp" data-act="setDayRevenue" value="${html(state.rev[d]??"")}" placeholder="0">`;
-        h+=`<div class="muted" style="margin-top:8px">Сейчас: ${html(money(rev))} · Тариф: ${html(tier.name)}</div></div>`;
+        h+=`<div class="section" style="margin-bottom:12px"><div class="row2" style="grid-template-columns:2fr 1fr">`;
+        h+=`<div><div class="muted" style="margin-bottom:6px">Выручка дня</div><input class="inp" data-act="setDayRevenue" value="${html(state.rev[d]??"")}" placeholder="0"></div>`;
+        h+=`<div><div class="muted" style="margin-bottom:6px">Без оплаты</div><input class="inp" data-act="setDayUnpaid" value="${html(state.unpaid[d]??"")}" placeholder="0"></div>`;
+        h+=`</div>`;
+        h+=`<div class="muted" style="margin-top:8px">Сейчас: ${html(money(rev))} = ${html(money(revBase))} + ${html(money(revUnpaid))} · Тариф: ${html(tier.name)}</div></div>`;
 
         h+=rolePanel("Администратор","admin",ADMINS,totals.admin,assigns.admin,false);
         h+=`<div style="height:10px"></div>`;
@@ -640,6 +675,8 @@
         h+=rolePanel("КМ саппорт","km_support",KMS,totals.km_support,assigns.km_support,false);
         h+=`<div style="height:10px"></div>`;
         h+=rolePanel("КМ саппорт²","km_support2",KMS,totals.km_support2,assigns.km_support2,true);
+        h+=`<div style="height:10px"></div>`;
+        h+=`<div class="section"><div class="muted" style="margin-bottom:6px">Комментарий</div><textarea class="ta" data-act="setDayComment" placeholder="Комментарий">${html(state.dayComment[d]??"")}</textarea></div>`;
       }
 
       h+=`</div></div></div></div></div>`;
@@ -719,7 +756,7 @@
       return;
     }
     if(act==="clearMonth"){
-      state.rev={}; state.asgn={}; state.activeDay=null;
+      state.rev={}; state.unpaid={}; state.asgn={}; state.dayComment={}; state.activeDay=null;
       scheduleSave();
       render();
       return;
@@ -746,7 +783,7 @@
       ensureDay(d);
       const day=state.asgn[d];
       const people=(role==="admin")?ADMINS:KMS;
-      const next={...day,[role]:[...(day[role]||[]),{name:people[0],hours:String(defHours(role)),breakage:"0",bonus:"0"}]};
+      const next={...day,[role]:[...(day[role]||[]),{name:people[0],hours:String(defHours(role)),breakage:"0"}]};
       setAssignDay(d,next);
       render();
       return;
@@ -808,6 +845,13 @@
       renderKeepFocus();
       return;
     }
+    if(t.matches("input[data-act='setDayUnpaid']")){
+      const d=state.activeDay; if(!d) return;
+      state.unpaid={...state.unpaid,[d]:t.value};
+      scheduleSave();
+      renderKeepFocus();
+      return;
+    }
     if(t.matches("input[data-act='setRate']")){
       const tier=t.getAttribute("data-tier");
       const key2=t.getAttribute("data-key");
@@ -840,6 +884,15 @@
       const adv=normalizeAdv(state.adv);
       adv[name]=t.value;
       state.adv=adv;
+      scheduleSave();
+      renderKeepFocus();
+      return;
+    }
+    if(t.matches("input[data-act='setBonus']")){
+      const name=t.getAttribute("data-name");
+      const bn=normalizeBonus(state.bonus);
+      bn[name]=t.value;
+      state.bonus=bn;
       scheduleSave();
       renderKeepFocus();
       return;
@@ -877,6 +930,13 @@
       const row={...arr[idx],[field]:t.value};
       arr[idx]=row;
       setAssignDay(d,{...day,[role]:arr});
+      renderKeepFocus();
+      return;
+    }
+    if(t.matches("textarea[data-act='setDayComment']")){
+      const d=state.activeDay; if(!d) return;
+      state.dayComment={...state.dayComment,[d]:t.value};
+      scheduleSave();
       renderKeepFocus();
       return;
     }
