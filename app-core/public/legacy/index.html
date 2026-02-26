@@ -606,7 +606,7 @@
     if(cloud.enabled && !cloud.session){
       const err=state.authError?`<div class="hint" style="color:#ef4444;margin-top:8px">${html(state.authError)}</div>`:"";
       const busy=state.authBusy?"disabled":"";
-      el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="card"><div class="card-h"><div><div class="t">Вход</div><div class="st">Авторизуйся, чтобы открыть рабочее пространство</div></div></div><div class="card-b"><div class="row"><input class="inp" placeholder="Email" data-act="authEmail" value="${html(state.email)}"><input class="inp" placeholder="Пароль" type="password" data-act="authPassword" value="${html(state.password)}"><button class="btn primary" data-act="signIn" ${busy}>Войти</button>${err}</div></div></div></div></div>`;
+      el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="card" style="width:min(25vw,420px);min-width:min(92vw,320px);margin:10vh auto 0"><div class="card-h"><div><div class="t">Вход</div><div class="st">Авторизуйся, чтобы открыть рабочее пространство</div></div></div><div class="card-b"><div class="row"><input class="inp" placeholder="Email" data-act="authEmail" value="${html(state.email)}"><input class="inp" placeholder="Пароль" type="password" data-act="authPassword" value="${html(state.password)}"><button class="btn primary" data-act="signIn" ${busy}>Войти</button>${err}</div></div></div></div></div>`;
       return;
     }
 
@@ -949,6 +949,26 @@
     if(!state.asgn[day]) state.asgn={...state.asgn,[day]:defDay(dt)};
   }
 
+  const submitSignIn=()=>{
+    if(!cloud.enabled || !cloud.supabase || state.authBusy) return;
+    state.authBusy=true;
+    state.authError="";
+    render();
+    cloud.supabase.auth.signInWithPassword({
+      email:String(state.email||"").trim(),
+      password:String(state.password||"")
+    }).then(async({data,error})=>{
+      state.authBusy=false;
+      if(error){
+        state.authError=error.message;
+        render();
+        return;
+      }
+      state.password="";
+      await hydrateBySession(data&&data.session?data.session:null);
+    });
+  };
+
   const tryInitCloud=()=>{
     initCloud().catch(err=>{
       state.authLoading=false;
@@ -986,23 +1006,7 @@
     const act=t.getAttribute("data-act");
 
     if(act==="signIn"){
-      if(!cloud.enabled || !cloud.supabase || state.authBusy) return;
-      state.authBusy=true;
-      state.authError="";
-      render();
-      cloud.supabase.auth.signInWithPassword({
-        email:String(state.email||"").trim(),
-        password:String(state.password||"")
-      }).then(async({data,error})=>{
-        state.authBusy=false;
-        if(error){
-          state.authError=error.message;
-          render();
-          return;
-        }
-        state.password="";
-        await hydrateBySession(data&&data.session?data.session:null);
-      });
+      submitSignIn();
       return;
     }
     if(act==="signOut"){
@@ -1245,6 +1249,14 @@
   });
 
   window.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter" && cloud.enabled && !cloud.session){
+      const ae=document.activeElement;
+      if(ae && (ae.getAttribute("data-act")==="authEmail" || ae.getAttribute("data-act")==="authPassword")){
+        e.preventDefault();
+        submitSignIn();
+        return;
+      }
+    }
     if(e.key==="Escape" && state.activeDay!=null){
       state.activeDay=null;
       render();
