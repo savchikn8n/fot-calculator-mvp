@@ -170,7 +170,14 @@
     ?new Intl.NumberFormat("ru-RU",{style:"currency",currency:"RUB",maximumFractionDigits:0}).format(Math.round(n))
     :"—";
   const isFriSat=dt=>{const d=dt.getDay();return d===5||d===6;};
-  const defHours=role=>role==="admin"?11:role==="km_main"?13:role==="km_support"?7:role==="km_support2"?5:0;
+  const defHours=(role,dt)=>{
+    const fs=isFriSat(dt);
+    if(role==="admin") return fs?13:12;
+    if(role==="km_main") return fs?15:14;
+    if(role==="km_support") return fs?9:8;
+    if(role==="km_support2") return 6;
+    return 0;
+  };
 
   const normalizeRates=r=>{
     const src=r&&typeof r==="object"?r:{};
@@ -211,10 +218,10 @@
   };
 
   const defDay=dt=>({
-    admin:[{name:ADMINS[0],hours:String(defHours("admin")),breakage:"0"}],
-    km_main:[{name:KMS[0],hours:String(defHours("km_main")),breakage:"0"}],
-    km_support:[{name:KMS[0],hours:String(defHours("km_support")),breakage:"0"}],
-    km_support2:isFriSat(dt)?[{name:KMS[0],hours:String(defHours("km_support2")),breakage:"0"}]:[],
+    admin:[{name:ADMINS[0],hours:String(defHours("admin",dt)),breakage:""}],
+    km_main:[{name:KMS[0],hours:String(defHours("km_main",dt)),breakage:""}],
+    km_support:[{name:KMS[0],hours:String(defHours("km_support",dt)),breakage:""}],
+    km_support2:isFriSat(dt)?[{name:KMS[0],hours:String(defHours("km_support2",dt)),breakage:""}]:[],
   });
 
   const alloc=(total,rows)=>{
@@ -635,6 +642,9 @@
         let h=`<div class="role" data-role="${roleKey}"><div class="roleTop"><div><div class="roleT">${html(title)}</div><div class="roleS">Сумма роли: ${html(money(total))}</div></div>`;
         h+=`<button class="add" data-act="addRow" data-role="${roleKey}">+ Добавить</button></div>`;
         if(rr.length===0 && allowEmpty) h+=`<div class="hint">Нет записей. Добавь человека, если роль была в этот день.</div>`;
+        if(rr.length>0){
+          h+=`<div class="rgrid muted"><div class="col2"></div><div class="col4"></div><div class="col2">Кол-во часов</div><div class="col2">Бой</div><div class="col4"></div></div>`;
+        }
 
         rr.forEach((r,idx)=>{
           h+=`<div class="rgrid">`;
@@ -643,7 +653,7 @@
             people.map(p=>`<option value="${html(p)}" ${p===(r.name||"")?"selected":""}>${html(p)}</option>`).join("")+
             `</select></div>`;
           h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="hours" value="${html(r.hours??"")}"></div>`;
-          h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"0")}" placeholder="Бой"></div>`;
+          h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"")}" placeholder="Бой"></div>`;
           h+=`<div class="col4 payout"><div class="pTop">${html(money(net[idx]||0))}</div><div class="pSub">${html(money(payouts[idx]||0))} − ${html(money(br[idx]||0))}</div></div>`;
           h+=`</div>`;
         });
@@ -736,6 +746,15 @@
   }
 
   el.addEventListener("click",(e)=>{
+    if(state.activeDay!=null){
+      const trg=e.target;
+      if(trg instanceof Element && trg.closest("#fot-modal") && !trg.closest(".dialog")){
+        state.activeDay=null;
+        render();
+        return;
+      }
+    }
+
     const t=e.target.closest("[data-act]");
     if(!t) return;
     const act=t.getAttribute("data-act");
@@ -780,7 +799,8 @@
       ensureDay(d);
       const day=state.asgn[d];
       const people=(role==="admin")?ADMINS:KMS;
-      const next={...day,[role]:[...(day[role]||[]),{name:people[0],hours:String(defHours(role)),breakage:"0"}]};
+      const dt=new Date(state.year,state.month,d);
+      const next={...day,[role]:[...(day[role]||[]),{name:people[0],hours:String(defHours(role,dt)),breakage:""}]};
       setAssignDay(d,next);
       render();
       return;
