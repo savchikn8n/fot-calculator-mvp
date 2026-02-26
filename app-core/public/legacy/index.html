@@ -80,6 +80,7 @@
   .btn{border-radius:16px;padding:12px 14px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border)}
   .btn.primary{background:var(--btn-primary-bg);color:var(--btn-primary-text);border-color:var(--btn-primary-bg)}
   .btn.ghost{background:var(--surface-2);color:var(--text-soft)}
+  .btn.contrast{background:transparent;color:#ef4444;border-color:#ef4444}
   .sel,.inp{width:100%;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text-strong);padding:10px 12px;font-size:13px;outline:none}
   .inp{text-align:right}
   .ta{width:100%;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text-strong);padding:10px 12px;font-size:13px;outline:none;resize:vertical;min-height:88px;line-height:1.35}
@@ -281,6 +282,7 @@
     email:"",
     password:"",
     readOnly:false,
+    confirmClear:false,
   };
   const canEdit=()=>!state.readOnly;
 
@@ -642,6 +644,16 @@
       return h;
     })();
 
+    const legend=(()=>{
+      let h=`<div class="legend"><div class="t">Легенда тарифов</div>`;
+      h+=`<div style="margin-top:12px" class="row">`;
+      h+=`<div class="lg"><div><span class="dot" style="background:rgba(244,63,94,.65)"></span>&lt; 50 000</div><div class="muted">красный</div></div>`;
+      h+=`<div class="lg"><div><span class="dot" style="background:rgba(245,158,11,.65)"></span>50 000–69 999</div><div class="muted">жёлтый</div></div>`;
+      h+=`<div class="lg"><div><span class="dot" style="background:rgba(16,185,129,.65)"></span>≥ 70 000</div><div class="muted">зелёный</div></div>`;
+      h+=`</div></div>`;
+      return h;
+    })();
+
     const settings=(()=>{
       const r=normalizeRates(state.rates);
       const tiers=[{id:"tier1",t:"< 50 000"},{id:"tier2",t:"50 000–69 999"},{id:"tier3",t:"≥ 70 000"}];
@@ -766,7 +778,7 @@
       const now=new Date();
       const yopts=Array.from({length:8}).map((_,i)=>now.getFullYear()-4+i);
       const modeTxt=state.readOnly?"Просмотр":"Редактор";
-      let h=`<div class="card"><div class="card-h"><div><div class="t">ФОТ-калькулятор (Все Свои)</div><div class="st">Выручка: ${html(money(mt.revenue))} · ФОТ: ${html(money(mt.fotNet))}</div></div><div class="chip">${mk}</div></div><div class="card-b">`;
+      let h=`<div class="card"><div class="card-h"><div><div class="t">ФОТ-калькулятор (Все Свои)</div><div class="st">Выручка: ${html(money(mt.revenue))} · ФОТ: ${html(money(mt.fotNet))}</div></div><div style="display:flex;gap:8px;align-items:flex-start"><div class="chip">${mk}</div><button class="btn ghost" data-act="clearMonth" ${state.readOnly?"disabled":""}>Очистить месяц</button></div></div><div class="card-b">`;
       h+=`<div class="row2" style="margin-bottom:10px">`;
       h+=`<div class="chip">Режим: ${modeTxt}</div>`;
       h+=cloud.enabled?`<button class="btn ghost" data-act="signOut">Выйти</button>`:`<div></div>`;
@@ -784,20 +796,12 @@
       h+=`<div class="pill ${state.theme==="dark"?"on":"off"}" data-act="setTheme" data-theme="dark">Тёмная</div>`;
       h+=`<div class="pill ${state.theme==="light"?"on":"off"}" data-act="setTheme" data-theme="light">Светлая</div>`;
       h+=`</div>`;
-      h+=`<div style="margin-top:14px"><button class="btn primary" style="width:100%" data-act="clearMonth" ${state.readOnly?"disabled":""}>Очистить месяц</button></div>`;
       h+=`</div></div>`;
-
-      h+=`<div class="legend"><div class="t">Легенда тарифов</div>`;
-      h+=`<div style="margin-top:12px" class="row">`;
-      h+=`<div class="lg"><div><span class="dot" style="background:rgba(244,63,94,.65)"></span>&lt; 50 000</div><div class="muted">красный</div></div>`;
-      h+=`<div class="lg"><div><span class="dot" style="background:rgba(245,158,11,.65)"></span>50 000–69 999</div><div class="muted">жёлтый</div></div>`;
-      h+=`<div class="lg"><div><span class="dot" style="background:rgba(16,185,129,.65)"></span>≥ 70 000</div><div class="muted">зелёный</div></div>`;
-      h+=`</div><div class="hint">Сохранение: ${cloud.enabled?"Supabase (workspace)":"localStorage"}.</div></div>`;
       return h;
     })();
 
     const main=(()=>{
-      if(state.view==="settings") return `<div class="row">${settings}</div>`;
+      if(state.view==="settings") return `<div class="split" style="grid-template-columns:2fr 1fr">${settings}<div>${legend}</div></div>`;
       return `<div class="row">${cal}${people}<div class="split">${manager}${totals}</div></div>`;
     })();
 
@@ -869,7 +873,13 @@
       return h;
     })();
 
-    el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}</div>`;
+    const clearModal=(()=>{
+      if(!state.confirmClear) return "";
+      let h=`<div class="modal on" id="fot-clear-modal"><div class="back" data-act="cancelClear"></div><div class="sheet"><div class="dialog" style="max-width:560px"><div class="dlgH"><div><div class="t">Подтверждение</div><div class="st">Вы уверены, что хотите удалить данные?</div></div></div><div class="dlgB"><div class="row2"><button class="btn contrast" data-act="cancelClear">Отмена</button><button class="btn primary" data-act="confirmClear">Подтвердить</button></div></div></div></div></div>`;
+      return h;
+    })();
+
+    el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}${clearModal}</div>`;
     if(state.readOnly){
       const selectors=[
         "button[data-act='clearMonth']",
@@ -1021,7 +1031,7 @@
       return;
     }
 
-    if(state.readOnly && ["clearMonth","addRow","delRow"].includes(act)) return;
+    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear"].includes(act)) return;
 
     if(act==="setView"){
       state.view=t.getAttribute("data-view");
@@ -1036,7 +1046,17 @@
       return;
     }
     if(act==="clearMonth"){
-      state.rev={}; state.unpaid={}; state.asgn={}; state.dayComment={}; state.activeDay=null;
+      state.confirmClear=true;
+      render();
+      return;
+    }
+    if(act==="cancelClear"){
+      state.confirmClear=false;
+      render();
+      return;
+    }
+    if(act==="confirmClear"){
+      state.rev={}; state.unpaid={}; state.asgn={}; state.dayComment={}; state.activeDay=null; state.confirmClear=false;
       scheduleSave();
       render();
       return;
