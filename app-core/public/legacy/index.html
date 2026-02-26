@@ -487,9 +487,8 @@
         const boj=(pt.adminTotals[name]||{}).breakage||0;
         const adv=Math.max(0,m0(state.adv[name]));
         const bonus=Math.max(0,m0(state.bonus[name]));
-        const salary=Math.max(0,m0(state.adminSalary[name]));
-        const net=gross - boj - adv + bonus - adminShare + salary;
-        return{ name,gross,boj,adv,bonus,salary,net };
+        const net=gross - boj - adv + bonus - adminShare;
+        return{ name,gross,boj,adv,bonus,net };
       });
 
       const kmRows=KMS.map(name=>{
@@ -497,14 +496,13 @@
         const boj=(pt.kmTotals[name]||{}).breakage||0;
         const adv=Math.max(0,m0(state.adv[name]));
         const bonus=Math.max(0,m0(state.bonus[name]));
-        const extra=(name==="Юра")?Math.max(0,m0(state.seniorKm)):0;
-        const net=gross - boj - adv + bonus - kmShare + extra;
-        return{ name,gross,boj,adv,bonus,extra,net };
+        const net=gross - boj - adv + bonus - kmShare;
+        return{ name,gross,boj,adv,bonus,net };
       });
 
       const sum=(arr,k)=>arr.reduce((a,r)=>a+(r[k]||0),0);
 
-      let h=`<div class="card"><div class="card-h"><div><div class="t">Сводка сотрудников</div><div class="st">Оклады/авансы/инвентаризация/доплаты</div></div></div><div class="card-b"><div class="row">`;
+      let h=`<div class="card"><div class="card-h"><div><div class="t">Сводка сотрудников</div><div class="st">Авансы/премии/инвентаризация/доплаты</div></div></div><div class="card-b"><div class="row">`;
 
       h+=`<div class="section"><div class="secTop"><div><div class="secT">Администраторы</div><div class="secS">Инвентаризация: ${html(money(adminInv))} · по ${html(money(adminShare))}</div></div>`;
       h+=`<div style="width:min(280px,100%)"><div class="row2">`;
@@ -515,11 +513,10 @@
       h+=`</div></div></div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
-      h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:14%">Нач.</th><th class="r" style="width:14%">Оклад</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:12%">Итог</th>`;
+      h+=`<th style="width:28%">Сотр.</th><th class="r" style="width:14%">Нач.</th><th class="r" style="width:14%">Бой</th><th class="r" style="width:14%">Аванс</th><th class="r" style="width:14%">Премия</th><th class="r" style="width:16%">Итог</th>`;
       h+=`</tr></thead><tbody>`;
       adminRows.forEach(r=>{
         h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td>`;
-        h+=`<td class="r"><input class="inp miniIn" data-act="setAdminSalary" data-name="${html(r.name)}" value="${html(state.adminSalary[r.name]||"")}"></td>`;
         h+=`<td class="r">${html(money(r.boj))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"></td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setBonus" data-name="${html(r.name)}" value="${html(state.bonus[r.name]||"")}"></td>`;
@@ -527,7 +524,6 @@
       });
       h+=`</tbody><tfoot><tr><td>Итого</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"gross")))}</td>`;
-      h+=`<td class="r">${html(money(sum(adminRows,"salary")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"boj")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"adv")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"bonus")))}</td>`;
@@ -541,10 +537,10 @@
       h+=`</div></div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
-      h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:16%">Нач.</th><th class="r" style="width:14%">Плюс</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:10%">Итог</th>`;
+      h+=`<th style="width:28%">Сотр.</th><th class="r" style="width:16%">Нач.</th><th class="r" style="width:14%">Бой</th><th class="r" style="width:14%">Аванс</th><th class="r" style="width:14%">Премия</th><th class="r" style="width:14%">Итог</th>`;
       h+=`</tr></thead><tbody>`;
       kmRows.forEach(r=>{
-        h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td><td class="r">${html(money(r.extra))}</td>`;
+        h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td>`;
         h+=`<td class="r">${html(money(r.boj))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"></td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setBonus" data-name="${html(r.name)}" value="${html(state.bonus[r.name]||"")}"></td>`;
@@ -552,7 +548,6 @@
       });
       h+=`</tbody><tfoot><tr><td>Итого</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"gross")))}</td>`;
-      h+=`<td class="r">${html(money(sum(kmRows,"extra")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"boj")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"adv")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"bonus")))}</td>`;
