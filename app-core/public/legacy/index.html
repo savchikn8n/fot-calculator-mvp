@@ -621,7 +621,7 @@
       const fd=new Date(state.year,state.month,1);
       const start=monIdx(fd.getDay());
       const total=Math.ceil((start+days)/7)*7;
-      let h=`<div class="card"><div class="card-h"><div><div class="t">Календарь</div><div class="st">Клик по дню — открыть редактор</div></div></div><div class="card-b">`;
+      let h=`<div class="card"><div class="card-h"><div><div class="t">Календарь</div><div class="st">Клик по дню — открыть редактор</div></div><button class="btn ghost" data-act="clearMonth" ${state.readOnly?"disabled":""}>Очистить месяц</button></div><div class="card-b">`;
       h+=`<div class="cal-head">${WEEKDAYS.map(w=>`<div>${w}</div>`).join("")}</div>`;
       h+=`<div class="cal-grid">`;
       for(let i=0;i<total;i++){
@@ -778,7 +778,7 @@
       const now=new Date();
       const yopts=Array.from({length:8}).map((_,i)=>now.getFullYear()-4+i);
       const modeTxt=state.readOnly?"Просмотр":"Редактор";
-      let h=`<div class="card"><div class="card-h"><div><div class="t">ФОТ-калькулятор (Все Свои)</div><div class="st">Выручка: ${html(money(mt.revenue))} · ФОТ: ${html(money(mt.fotNet))}</div></div><div style="display:flex;gap:8px;align-items:flex-start"><div class="chip">${mk}</div><button class="btn ghost" data-act="clearMonth" ${state.readOnly?"disabled":""}>Очистить месяц</button></div></div><div class="card-b">`;
+      let h=`<div class="card"><div class="card-h"><div><div class="t">ФОТ-калькулятор (Все Свои)</div><div class="st">Выручка: ${html(money(mt.revenue))} · ФОТ: ${html(money(mt.fotNet))}</div></div><div class="chip">${mk}</div></div><div class="card-b">`;
       h+=`<div class="row2" style="margin-bottom:10px">`;
       h+=`<div class="chip">Режим: ${modeTxt}</div>`;
       h+=cloud.enabled?`<button class="btn ghost" data-act="signOut">Выйти</button>`:`<div></div>`;
