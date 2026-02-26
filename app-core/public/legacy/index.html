@@ -89,8 +89,8 @@
   .muted{color:var(--text-muted);font-size:12px}
   .cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;font-size:11px;color:var(--text-muted)}
   .cal-grid{margin-top:8px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-  .cell{height:80px;border-radius:18px;border:1px solid var(--border);background:var(--cell-bg)}
-  .day{padding:10px 12px;cursor:pointer;user-select:none;transition:background .15s}
+  .cell{height:80px;border-radius:18px;border:1px solid var(--border);background:var(--cell-bg);overflow:hidden}
+  .day{height:100%;border-radius:inherit;padding:10px 12px;cursor:pointer;user-select:none;transition:background .15s}
   .day:hover{background:var(--cell-hover)}
   .cell.red{background:rgba(244,63,94,.15);border-color:rgba(244,63,94,.25)}
   .cell.yel{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.25)}
