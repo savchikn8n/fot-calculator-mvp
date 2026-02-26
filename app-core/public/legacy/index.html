@@ -653,6 +653,8 @@
     const root=el;
     const ae=document.activeElement;
     const inside=ae && root.contains(ae);
+    const sx=window.scrollX;
+    const sy=window.scrollY;
 
     let sel=null, ss=null, se=null;
     if(inside && ae.getAttribute){
@@ -686,6 +688,7 @@
         }
       }
     }
+    window.scrollTo(sx,sy);
   }
 
   function setAssignDay(day,next){
@@ -812,7 +815,7 @@
       r[tier][key2]=t.value;
       state.rates=r;
       scheduleSave();
-      render();
+      renderKeepFocus();
       return;
     }
     if(t.matches("input[data-act='setInvA']")){
@@ -821,7 +824,7 @@
       inv.admin[k]=t.value;
       state.inv=inv;
       scheduleSave();
-      render();
+      renderKeepFocus();
       return;
     }
     if(t.matches("input[data-act='setInvK']")){
@@ -829,7 +832,7 @@
       inv.km.tobacco=t.value;
       state.inv=inv;
       scheduleSave();
-      render();
+      renderKeepFocus();
       return;
     }
     if(t.matches("input[data-act='setAdvance']")){
@@ -838,7 +841,7 @@
       adv[name]=t.value;
       state.adv=adv;
       scheduleSave();
-      render();
+      renderKeepFocus();
       return;
     }
     if(t.matches("input[data-act='setAdminSalary']")){
@@ -847,20 +850,20 @@
       sal[name]=t.value;
       state.adminSalary=sal;
       scheduleSave();
-      render();
+      renderKeepFocus();
       return;
     }
     if(t.matches("input[data-act='setSeniorKm']")){
       state.seniorKm=t.value;
       scheduleSave();
-      render();
+      renderKeepFocus();
       return;
     }
     if(t.matches("input[data-act='setManager']")){
       const k=t.getAttribute("data-key");
       state.manager={...state.manager,[k]:t.value};
       scheduleSave();
-      render();
+      renderKeepFocus();
       return;
     }
     if(t.matches("input[data-act='setRow']")){
