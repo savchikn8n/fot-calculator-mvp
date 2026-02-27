@@ -246,6 +246,11 @@
     if(s<=0) return (rows||[]).map(()=>0);
     return hs.map(h=>total*h/s);
   };
+  const fmtHours=v=>{
+    if(!Number.isFinite(v)) return "0";
+    const n=Math.round(v*100)/100;
+    return String(n).replace(/\.00$/,"").replace(/(\.\d)0$/,"$1");
+  };
 
   const sumHours=(rows)=> (Array.isArray(rows)?rows:[]).reduce((a,r)=>a + h0(r && r.hours), 0);
 
@@ -655,6 +660,32 @@
     return{adminTotals,kmTotals};
   };
 
+  const calcShiftCounts=()=>{
+    const adminCounts={}; const kmCounts={};
+    ADMINS.forEach(n=>adminCounts[n]=0);
+    KMS.forEach(n=>kmCounts[n]=0);
+
+    const add=(rows,target)=>{
+      (rows||[]).forEach(r=>{
+        const name=String((r&&r.name)||"").trim();
+        if(!name || target[name]==null) return;
+        target[name]+=1;
+      });
+    };
+
+    const days=dim();
+    for(let d=1; d<=days; d++){
+      if(n0(state.rev[d])<=0) continue;
+      const dt=new Date(state.year,state.month,d);
+      const a=getDay(d,dt);
+      add(a.admin,adminCounts);
+      add(a.km_main,kmCounts);
+      add(a.km_support,kmCounts);
+      add(a.km_support2,kmCounts);
+    }
+    return{adminCounts,kmCounts};
+  };
+
   const html=(s)=>String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
 
   function render(){
@@ -678,6 +709,7 @@
     const mk=key();
     const mt=calcMonthTotals();
     const pt=calcPeopleTotals();
+    const sc=calcShiftCounts();
 
     const cal=(()=>{
       const fd=new Date(state.year,state.month,1);
@@ -867,6 +899,15 @@
       if(state.scheduleStatus) h+=`<div class="hint" style="color:#16a34a">${html(state.scheduleStatus)}</div>`;
       if(state.scheduleError) h+=`<div class="hint" style="color:#ef4444">${html(state.scheduleError)}</div>`;
       h+=`</div></div></div>`;
+
+      h+=`<div class="card" style="margin-top:12px"><div class="card-h"><div><div class="t">Количество смен</div><div class="st">Учитываются только дни с заполненной выручкой</div></div></div><div class="card-b">`;
+      h+=`<div class="section"><div class="secT">Администраторы</div><div class="row" style="margin-top:10px">`;
+      ADMINS.forEach(n=>{ h+=`<div class="lg"><div>${html(n)}</div><div class="chip">${sc.adminCounts[n]||0}</div></div>`; });
+      h+=`</div></div>`;
+      h+=`<div class="section" style="margin-top:10px"><div class="secT">Кальянные мастера</div><div class="row" style="margin-top:10px">`;
+      KMS.forEach(n=>{ h+=`<div class="lg"><div>${html(n)}</div><div class="chip">${sc.kmCounts[n]||0}</div></div>`; });
+      h+=`</div></div>`;
+      h+=`</div></div>`;
       return h;
     })();
 
@@ -1236,7 +1277,12 @@
       const day=state.asgn[d];
       const people=(role==="admin")?ADMINS:KMS;
       const dt=new Date(state.year,state.month,d);
-      const next={...day,[role]:[...(day[role]||[]),{name:people[0],hours:String(defHours(role,dt)),breakage:""}]};
+      const prev=(day[role]||[]).slice();
+      const totalHours=sumHours(prev)>0?sumHours(prev):defHours(role,dt);
+      const nextRows=[...prev,{name:people[0],hours:"",breakage:""}];
+      const share=nextRows.length>0?totalHours/nextRows.length:0;
+      const balanced=nextRows.map(r=>({...r,hours:fmtHours(share)}));
+      const next={...day,[role]:balanced};
       setAssignDay(d,next);
       render();
       return;
