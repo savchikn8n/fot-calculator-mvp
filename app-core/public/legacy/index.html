@@ -313,13 +313,13 @@
     if(rr.length===0) return rr;
     const target=Math.max(0,Number(totalHours)||0);
     if(rr.length===1){
-      rr[0].hours=fmtHours(target);
+      rr[0].hours=String(newHours??"");
       return rr;
     }
 
     const idx=Math.max(0,Math.min(rr.length-1,editedIdx));
     const edited=Math.max(0,Math.min(target,h0(newHours)));
-    rr[idx].hours=fmtHours(edited);
+    rr[idx].hours=String(newHours??"");
 
     const restIdx=[];
     for(let i=0;i<rr.length;i++) if(i!==idx) restIdx.push(i);
@@ -897,15 +897,15 @@
         const d=i-start+1;
         if(d<1||d>days){ h+=`<div class="cell"></div>`; continue; }
         const dt=new Date(state.year,state.month,d);
-        const rev=dayRevenueTotal(d);
+        const revRaw=n0(state.rev[d]);
         const a=getDay(d,dt);
         const admins=uniqNames(a.admin).join(", ")||"—";
         const kms=uniqNames([...(a.km_main||[]),...(a.km_support||[]),...(a.km_support2||[])]).join(", ")||"—";
-        const cls=tierClass(rev);
+        const cls=tierClass(revRaw);
         const todayCls=isCurrentMonth && now.getDate()===d?" today":"";
         const hasComment=String((state.dayComment||{})[d]||"").trim().length>0;
         h+=`<div class="cell ${cls}${todayCls}"><div class="day${hasComment?" comment":""}" data-act="openDay" data-day="${d}">`;
-        h+=`<div class="daytop"><div class="dnum">${d}</div><div class="drev">${rev?html(money(rev)):""}</div></div>`;
+        h+=`<div class="daytop"><div class="dnum">${d}</div><div class="drev">${revRaw?html(money(revRaw)):""}</div></div>`;
         h+=`<div class="small"><div>А: ${html(admins)}</div><div>КМ: ${html(kms)}</div></div>`;
         if(hasComment) h+=`<span class="cmtBadge" title="Есть комментарий"></span>`;
         h+=`</div></div>`;
@@ -1648,7 +1648,9 @@
       const dt=new Date(state.year,state.month,d);
       const prev=(day[role]||[]).slice();
       const totalHours=defHours(role,dt);
-      const nextRows=[...prev,{name:people[0],hours:"",breakage:""}];
+      const used=new Set(prev.map(r=>String((r&&r.name)||"").trim()).filter(Boolean));
+      const pick=people.find(p=>!used.has(p)) || people[0];
+      const nextRows=[...prev,{name:pick,hours:"",breakage:""}];
       const share=nextRows.length>0?totalHours/nextRows.length:0;
       const balanced=nextRows.map(r=>({...r,hours:fmtHours(share)}));
       const next={...day,[role]:balanced};
@@ -1853,16 +1855,10 @@
       const day=state.asgn[d];
       const arr=(day[role]||[]).slice();
       if(field==="hours"){
-        if(role==="km_support2"){
-          const row={...arr[idx],[field]:t.value};
-          arr[idx]=row;
-          setAssignDay(d,{...day,[role]:arr});
-        }else{
-          const dt=new Date(state.year,state.month,d);
-          const total=defHours(role,dt);
-          const nextRows=rebalanceRoleHours(arr,total,idx,t.value);
-          setAssignDay(d,{...day,[role]:nextRows});
-        }
+        const dt=new Date(state.year,state.month,d);
+        const total=defHours(role,dt);
+        const nextRows=rebalanceRoleHours(arr,total,idx,t.value);
+        setAssignDay(d,{...day,[role]:nextRows});
       }else{
         const row={...arr[idx],[field]:t.value};
         arr[idx]=row;
