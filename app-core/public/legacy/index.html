@@ -665,23 +665,25 @@
     ADMINS.forEach(n=>adminCounts[n]=0);
     KMS.forEach(n=>kmCounts[n]=0);
 
-    const add=(rows,target)=>{
+    const add=(rows,target,list)=>{
       (rows||[]).forEach(r=>{
-        const name=String((r&&r.name)||"").trim();
-        if(!name || target[name]==null) return;
+        const raw=String((r&&r.name)||"").trim();
+        if(!raw) return;
+        const name=normalizePerson(raw,list) || LEGACY_NAME_MAP[raw] || raw;
+        if(target[name]==null) return;
         target[name]+=1;
       });
     };
 
     const days=dim();
     for(let d=1; d<=days; d++){
-      if(n0(state.rev[d])<=0) continue;
+      if(dayRevenueTotal(d)<=0) continue;
       const dt=new Date(state.year,state.month,d);
       const a=getDay(d,dt);
-      add(a.admin,adminCounts);
-      add(a.km_main,kmCounts);
-      add(a.km_support,kmCounts);
-      add(a.km_support2,kmCounts);
+      add(a.admin,adminCounts,ADMINS);
+      add(a.km_main,kmCounts,KMS);
+      add(a.km_support,kmCounts,KMS);
+      add(a.km_support2,kmCounts,KMS);
     }
     return{adminCounts,kmCounts};
   };
