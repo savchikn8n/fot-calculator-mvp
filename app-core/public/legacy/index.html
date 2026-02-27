@@ -293,6 +293,41 @@
     const n=Math.round(v*100)/100;
     return String(n).replace(/\.00$/,"").replace(/(\.\d)0$/,"$1");
   };
+  const rebalanceRoleHours=(rows,totalHours,editedIdx,newHours)=>{
+    const rr=(rows||[]).map(r=>({...r}));
+    if(rr.length===0) return rr;
+    const target=Math.max(0,Number(totalHours)||0);
+    if(rr.length===1){
+      rr[0].hours=fmtHours(target);
+      return rr;
+    }
+
+    const idx=Math.max(0,Math.min(rr.length-1,editedIdx));
+    const edited=Math.max(0,Math.min(target,Number(newHours)||0));
+    rr[idx].hours=fmtHours(edited);
+
+    const restIdx=[];
+    for(let i=0;i<rr.length;i++) if(i!==idx) restIdx.push(i);
+    const remain=Math.max(0,target-edited);
+    const prev=restIdx.map(i=>h0(rr[i]&&rr[i].hours));
+    const prevSum=prev.reduce((a,b)=>a+b,0);
+
+    let assigned=0;
+    restIdx.forEach((ri,j)=>{
+      let part=0;
+      if(j===restIdx.length-1){
+        part=Math.max(0,remain-assigned);
+      }else if(prevSum>0){
+        part=remain*(prev[j]/prevSum);
+        assigned+=part;
+      }else{
+        part=remain/restIdx.length;
+        assigned+=part;
+      }
+      rr[ri].hours=fmtHours(part);
+    });
+    return rr;
+  };
 
   const sumHours=(rows)=> (Array.isArray(rows)?rows:[]).reduce((a,r)=>a + h0(r && r.hours), 0);
 
@@ -1420,7 +1455,7 @@
       const people=(role==="admin")?ADMINS:KMS;
       const dt=new Date(state.year,state.month,d);
       const prev=(day[role]||[]).slice();
-      const totalHours=sumHours(prev)>0?sumHours(prev):defHours(role,dt);
+      const totalHours=defHours(role,dt);
       const nextRows=[...prev,{name:people[0],hours:"",breakage:""}];
       const share=nextRows.length>0?totalHours/nextRows.length:0;
       const balanced=nextRows.map(r=>({...r,hours:fmtHours(share)}));
@@ -1625,9 +1660,16 @@
       ensureDay(d);
       const day=state.asgn[d];
       const arr=(day[role]||[]).slice();
-      const row={...arr[idx],[field]:t.value};
-      arr[idx]=row;
-      setAssignDay(d,{...day,[role]:arr});
+      if(field==="hours"){
+        const dt=new Date(state.year,state.month,d);
+        const total=defHours(role,dt);
+        const nextRows=rebalanceRoleHours(arr,total,idx,t.value);
+        setAssignDay(d,{...day,[role]:nextRows});
+      }else{
+        const row={...arr[idx],[field]:t.value};
+        arr[idx]=row;
+        setAssignDay(d,{...day,[role]:arr});
+      }
       renderKeepFocus();
       return;
     }
