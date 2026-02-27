@@ -610,23 +610,27 @@
   };
 
   const calcMonthTotals=()=>{
-    let revenue=0, fotNet=0;
+    let rawRevenue=0, unpaidRevenue=0, fotNet=0;
     const sumField=(arr,field)=>(arr||[]).reduce((a,r)=>a+Math.max(0,m0(r&&r[field])),0);
     const days=dim();
     for(let d=1; d<=days; d++){
       const dt=new Date(state.year,state.month,d);
-      const r=dayRevenueTotal(d);
-      revenue+=r;
+      const raw=n0(state.rev[d]);
+      const bo=n0(state.unpaid[d]);
+      const r=raw+bo;
+      rawRevenue+=raw;
+      unpaidRevenue+=bo;
       const a=getDay(d,dt);
       const {totals}=computeForDay(r,a);
       const br=sumField(a.admin,"breakage")+sumField(a.km_main,"breakage")+sumField(a.km_support,"breakage")+sumField(a.km_support2,"breakage");
       const gross=totals.admin+totals.km_main+totals.km_support+totals.km_support2;
       fotNet+=gross-br;
     }
+    const revenue=rawRevenue+unpaidRevenue;
     const bonusSum=[...new Set([...ADMINS,...KMS])].reduce((a,name)=>a+Math.max(0,m0(state.bonus[name])),0);
     const managerPay=(revenue*n0(state.manager.percent)/100)+Math.max(0,m0(state.manager.seniorBonus));
     fotNet+=bonusSum+managerPay;
-    return{revenue,fotNet};
+    return{rawRevenue,unpaidRevenue,revenue,fotNet};
   };
 
   const calcPeopleTotals=()=>{
@@ -873,7 +877,9 @@
 
     const totals=(()=>{
       let h=`<div class="card"><div class="card-h"><div><div class="t">Итого</div><div class="st">Сводка месяца</div></div></div><div class="card-b"><div class="row">`;
-      h+=`<div class="section"><div class="muted">Выручка</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.revenue))}</div></div>`;
+      h+=`<div class="section"><div class="muted">Голая выручка</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.rawRevenue))}</div></div>`;
+      h+=`<div class="section"><div class="muted">БО</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.unpaidRevenue))}</div></div>`;
+      h+=`<div class="section"><div class="muted">Общая выручка</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.revenue))}</div></div>`;
       h+=`<div class="section"><div class="muted">ФОТ (нетто)</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.fotNet))}</div></div>`;
       h+=`</div></div></div>`;
       return h;
