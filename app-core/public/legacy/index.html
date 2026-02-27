@@ -146,9 +146,20 @@
   if(!el) return;
 
   const MONTHS=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
-  const ADMINS=["Слесарева К.","Григорьев М.","Павлова Д."];
-  const KMS=["Линиченко Ю.","Луя Р.","Золотарев Е.","Родин Л.","Павлова Д."];
-  const MANAGER_NAME="Павлова Д.";
+  let ADMINS=["Слесарева К.","Григорьев М.","Павлова Д."];
+  let KMS=["Линиченко Ю.","Луя Р.","Золотарев Е.","Родин Л.","Павлова Д."];
+  let MANAGER_NAME="Павлова Д.";
+  let SENIOR_KM_NAME="Линиченко Ю.";
+  const STAFF_DEFAULT=[
+    {id:"adm-kristina",name:"Слесарева К.",fullName:"Слесарева Кристина",role:"admin",active:true},
+    {id:"adm-mikhail",name:"Григорьев М.",fullName:"Григорьев Михаил",role:"admin",active:true},
+    {id:"adm-darya",name:"Павлова Д.",fullName:"Павлова Дарья",role:"senior_admin",active:true},
+    {id:"km-yura",name:"Линиченко Ю.",fullName:"Линиченко Юрий",role:"senior_km",active:true},
+    {id:"km-rudolf",name:"Луя Р.",fullName:"Луя Рудольф",role:"km",active:true},
+    {id:"km-evgeny",name:"Золотарев Е.",fullName:"Золотарев Евгений",role:"km",active:true},
+    {id:"km-leonid",name:"Родин Л.",fullName:"Родин Леонид",role:"km",active:true},
+    {id:"km-darya",name:"Павлова Д.",fullName:"Павлова Дарья",role:"km",active:true},
+  ];
   const LEGACY_NAME_MAP={
     "Кристина":"Слесарева К.",
     "Михаил":"Григорьев М.",
@@ -232,6 +243,34 @@
     Object.keys(src).forEach(k=>out[k]=String(src[k]??""));
     return out;
   };
+  const cap=s=>{const t=String(s||"").trim(); return t? t.charAt(0).toUpperCase()+t.slice(1).toLowerCase() : "";};
+  const formatStaffName=raw=>{
+    const txt=String(raw||"").trim().replace(/\s+/g," ");
+    if(!txt) return{display:"",full:""};
+    const parts=txt.split(" ");
+    if(parts.length>=2){
+      const sur=cap(parts[0]);
+      const nm=cap(parts[1]);
+      return{display:`${sur} ${nm.charAt(0)}.`,full:`${sur} ${nm}`};
+    }
+    return{display:cap(parts[0]),full:cap(parts[0])};
+  };
+  const normalizeStaff=arr=>{
+    const src=Array.isArray(arr)&&arr.length?arr:STAFF_DEFAULT;
+    const out=src.map((s,idx)=>{
+      const f=formatStaffName((s&&s.fullName)||s&&s.name||"");
+      const roleRaw=String((s&&s.role)||"").trim();
+      const role=(roleRaw==="admin"||roleRaw==="km"||roleRaw==="senior_admin"||roleRaw==="senior_km")?roleRaw:"km";
+      return{
+        id:String((s&&s.id)||`staff-${idx}-${Date.now()}`),
+        name:(s&&s.name&&String(s.name).trim())||f.display||`Сотрудник ${idx+1}`,
+        fullName:(s&&s.fullName&&String(s.fullName).trim())||f.full||((s&&s.name&&String(s.name).trim())||""),
+        role,
+        active:s&&s.active===false?false:true
+      };
+    });
+    return out.filter(s=>s.active!==false && String(s.name||"").trim());
+  };
 
   const defDay=dt=>({
     admin:[{name:ADMINS[0],hours:String(defHours("admin",dt)),breakage:""}],
@@ -272,7 +311,7 @@
     saveSeq:0,
     ignoreNextRealtime:0,
     channel:null,
-    store:{months:{}},
+    store:{months:{},staff:STAFF_DEFAULT},
   };
 
   const state={
@@ -305,8 +344,20 @@
     scheduleText:"",
     scheduleStatus:"",
     scheduleError:"",
+    staff:normalizeStaff(STAFF_DEFAULT),
   };
   const canEdit=()=>!state.readOnly;
+  const syncRoleLists=()=>{
+    const active=normalizeStaff(state.staff);
+    state.staff=active;
+    ADMINS=active.filter(s=>s.role==="admin"||s.role==="senior_admin").map(s=>s.name);
+    KMS=active.filter(s=>s.role==="km"||s.role==="senior_km").map(s=>s.name);
+    MANAGER_NAME=(active.find(s=>s.role==="senior_admin")||active.find(s=>s.role==="admin")||{name:"—"}).name;
+    SENIOR_KM_NAME=(active.find(s=>s.role==="senior_km")||active.find(s=>s.role==="km")||{name:"—"}).name;
+    if(ADMINS.length===0) ADMINS=["Слесарева К."];
+    if(KMS.length===0) KMS=["Линиченко Ю."];
+  };
+  syncRoleLists();
   const NAME_ALIASES={
     "леня":"Родин Л.",
     "лёня":"Родин Л.",
@@ -335,6 +386,20 @@
     const k=cleanName(raw);
     const ali=NAME_ALIASES[k];
     if(ali && list.includes(ali)) return ali;
+    const fromStaff=(state.staff||[]).find(s=>{
+      if(!s || !list.includes(s.name)) return false;
+      const dn=cleanName(s.name);
+      if(dn===k) return true;
+      const full=cleanName(s.fullName||"");
+      if(full===k) return true;
+      const parts=String(s.fullName||"").trim().split(/\s+/).filter(Boolean);
+      const first=parts[1]?cleanName(parts[1]):"";
+      if(first && first.startsWith(k)) return true;
+      const sur=parts[0]?cleanName(parts[0]):"";
+      if(sur && sur.startsWith(k)) return true;
+      return false;
+    });
+    if(fromStaff) return fromStaff.name;
     const hit=list.find(x=>cleanName(x)===k);
     return hit||null;
   };
@@ -383,11 +448,12 @@
   const dim=()=>new Date(state.year,state.month+1,0).getDate();
   const key=()=>monthKey(state.year,state.month);
   const dayRevenueTotal=d=>n0(state.rev[d])+n0(state.unpaid[d]);
-  const emptyStore=()=>({months:{}});
+  const emptyStore=()=>({months:{},staff:normalizeStaff(STAFF_DEFAULT)});
 
   const toStoreSnapshot=()=>{
     const k=key();
     const next={...cloud.store,months:{...(cloud.store.months||{})}};
+    next.staff=normalizeStaff(state.staff);
     next.months[k]={
       rev:state.rev,
       unpaid:state.unpaid,
@@ -554,6 +620,11 @@
   const loadMonth=(k)=>{
     state.hydrating=true;
     const store=cloud.store&&typeof cloud.store==="object"?cloud.store:emptyStore();
+    state.staff=normalizeStaff(store.staff);
+    syncRoleLists();
+    state.adv=normalizeAdv(state.adv);
+    state.bonus=normalizeBonus(state.bonus);
+    state.adminSalary=normalizeAdminSalary(state.adminSalary);
     const d=store.months&&store.months[k];
     if(!d){
       state.rev={};
@@ -776,6 +847,23 @@
         h+=`</div></div>`;
       });
       h+=`</div></div></div>`;
+      h+=`<div class="card" style="margin-top:12px"><div class="card-h"><div><div class="t">Сотрудники</div><div class="st">Состав смен и должности</div></div></div><div class="card-b">`;
+      h+=`<div class="tableWrap"><table><thead><tr><th style="width:48%">Фамилия и инициал</th><th style="width:38%">Должность</th><th class="r" style="width:14%"></th></tr></thead><tbody>`;
+      state.staff.forEach((s,idx)=>{
+        h+=`<tr>`;
+        h+=`<td><input class="inp miniIn" style="text-align:left" data-act="setStaffName" data-idx="${idx}" value="${html(s.name||"")}"></td>`;
+        h+=`<td><select class="sel miniIn" data-act="setStaffRole" data-idx="${idx}">`;
+        h+=`<option value="admin" ${s.role==="admin"?"selected":""}>Администратор</option>`;
+        h+=`<option value="senior_admin" ${s.role==="senior_admin"?"selected":""}>Старший Администратор</option>`;
+        h+=`<option value="km" ${s.role==="km"?"selected":""}>Кальянный мастер</option>`;
+        h+=`<option value="senior_km" ${s.role==="senior_km"?"selected":""}>Старший КМ</option>`;
+        h+=`</select></td>`;
+        h+=`<td class="r"><button class="del" data-act="removeStaff" data-idx="${idx}">×</button></td>`;
+        h+=`</tr>`;
+      });
+      h+=`</tbody></table></div>`;
+      h+=`<div style="margin-top:12px"><button class="btn primary" style="width:100%" data-act="addStaff">Добавить нового сотрудника</button></div>`;
+      h+=`</div></div>`;
       return h;
     })();
 
@@ -835,7 +923,7 @@
 
       h+=`<div class="section"><div class="secTop"><div><div class="secT">Кальянные мастера</div><div class="secS">Инвентаризация: ${html(money(kmInv))} · по ${html(money(kmShare))}</div></div>`;
       h+=`<div style="width:min(280px,100%)">`;
-      h+=`<div class="muted" style="margin-bottom:6px">Доплата старшему (Линиченко Ю.)</div>`;
+      h+=`<div class="muted" style="margin-bottom:6px">Доплата старшему (${html(SENIOR_KM_NAME)})</div>`;
       h+=`<input class="inp miniIn" data-act="setSeniorKm" value="${html(state.seniorKm||"")}">`;
       h+=`<div style="margin-top:10px"><input class="inp miniIn" placeholder="Табак" data-act="setInvK" value="${html(inv.km.tobacco)}"></div>`;
       h+=`</div></div>`;
@@ -1016,6 +1104,8 @@
       const selectors=[
         "button[data-act='clearMonth']",
         "button[data-act='applySchedule']",
+        "button[data-act='addStaff']",
+        "button[data-act='removeStaff']",
         "button[data-act='addRow']",
         "button[data-act='delRow']",
         "input[data-act='setDayRevenue']",
@@ -1029,7 +1119,9 @@
         "input[data-act='setSeniorKm']",
         "input[data-act='setManager']",
         "input[data-act='setRow']",
+        "input[data-act='setStaffName']",
         "select[data-act='setRow']",
+        "select[data-act='setStaffRole']",
         "textarea[data-act='setDayComment']",
         "textarea[data-act='setScheduleText']"
       ];
@@ -1111,6 +1203,15 @@
       state.password="";
       await hydrateBySession(data&&data.session?data.session:null);
     });
+  };
+  const applyStaffUpdate=nextStaff=>{
+    state.staff=normalizeStaff(nextStaff);
+    syncRoleLists();
+    state.adv=normalizeAdv(state.adv);
+    state.bonus=normalizeBonus(state.bonus);
+    state.adminSalary=normalizeAdminSalary(state.adminSalary);
+    scheduleSave();
+    render();
   };
 
   const tryInitCloud=()=>{
@@ -1241,7 +1342,7 @@
       return;
     }
 
-    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear","applySchedule"].includes(act)) return;
+    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear","applySchedule","addStaff","removeStaff"].includes(act)) return;
 
     if(act==="setView"){
       state.view=t.getAttribute("data-view");
@@ -1273,6 +1374,19 @@
     }
     if(act==="applySchedule"){
       applyScheduleImport();
+      return;
+    }
+    if(act==="addStaff"){
+      const next=[...state.staff,{id:`staff-${Date.now()}`,name:"Новый С.",fullName:"Новый Сотрудник",role:"km",active:true}];
+      applyStaffUpdate(next);
+      return;
+    }
+    if(act==="removeStaff"){
+      const idx=Number(t.getAttribute("data-idx"));
+      if(idx<0 || idx>=state.staff.length) return;
+      const next=state.staff.slice();
+      next.splice(idx,1);
+      applyStaffUpdate(next);
       return;
     }
     if(act==="openDay"){
@@ -1327,7 +1441,7 @@
   el.addEventListener("change",(e)=>{
     const t=e.target;
     if(!(t instanceof HTMLElement)) return;
-    if(state.readOnly && t.matches("select[data-act='setRow']")) return;
+    if(state.readOnly && (t.matches("select[data-act='setRow']") || t.matches("select[data-act='setStaffRole']"))) return;
 
     if(t.matches("select[data-act='setYear']")){
       state.year=Number(t.value);
@@ -1353,6 +1467,14 @@
       render();
       return;
     }
+    if(t.matches("select[data-act='setStaffRole']")){
+      const idx=Number(t.getAttribute("data-idx"));
+      if(idx<0 || idx>=state.staff.length) return;
+      const next=state.staff.slice();
+      next[idx]={...next[idx],role:t.value};
+      applyStaffUpdate(next);
+      return;
+    }
   });
 
   el.addEventListener("input",(e)=>{
@@ -1371,6 +1493,16 @@
       state.scheduleText=t.value;
       return;
     }
+    if(t.matches("input[data-act='setStaffName']")){
+      const idx=Number(t.getAttribute("data-idx"));
+      if(idx<0 || idx>=state.staff.length) return;
+      const raw=t.value;
+      const f=formatStaffName(raw);
+      const next=state.staff.slice();
+      next[idx]={...next[idx],name:f.display||raw.trim(),fullName:f.full||raw.trim()};
+      applyStaffUpdate(next);
+      return;
+    }
 
     if(state.readOnly && (
       t.matches("input[data-act='setDayRevenue']") ||
@@ -1385,7 +1517,8 @@
       t.matches("input[data-act='setManager']") ||
       t.matches("input[data-act='setRow']") ||
       t.matches("textarea[data-act='setDayComment']") ||
-      t.matches("textarea[data-act='setScheduleText']")
+      t.matches("textarea[data-act='setScheduleText']") ||
+      t.matches("input[data-act='setStaffName']")
     )) return;
 
     if(t.matches("input[data-act='setDayRevenue']")){
