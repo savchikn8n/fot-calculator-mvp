@@ -34,8 +34,8 @@
     --cell-bg:rgba(9,9,11,.25);
     --cell-hover:rgba(9,9,11,.45);
     --thead-bg:rgba(9,9,11,.6);
-    --total-bg:rgba(250,204,21,.22);
-    --total-text:#fef08a;
+    --total-bg:rgba(113,113,122,.18);
+    --total-text:var(--text-strong);
   }
   #fot-app .theme-light{
     --bg:#f5f7fb;
@@ -61,8 +61,8 @@
     --cell-bg:#f8fafc;
     --cell-hover:rgba(17,24,39,.08);
     --thead-bg:#f3f4f6;
-    --total-bg:rgba(234,179,8,.18);
-    --total-text:#854d0e;
+    --total-bg:rgba(15,23,42,.08);
+    --total-text:var(--text-strong);
   }
   #fot-app *{box-sizing:border-box}
   .bg{min-height:100vh;background:var(--bg);color:var(--text)}
@@ -99,6 +99,8 @@
   .cell{height:80px;border-radius:18px;border:1px solid var(--border);background:var(--cell-bg);overflow:hidden}
   .cell.today{box-shadow:inset 0 0 0 2px #facc15}
   .day{height:100%;border-radius:inherit;padding:10px 12px;cursor:pointer;user-select:none;transition:background .15s}
+  .day.comment{position:relative;padding-bottom:22px}
+  .cmtBadge{position:absolute;right:8px;bottom:8px;width:8px;height:8px;border-radius:999px;background:#ef4444;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
   .day:hover{background:var(--cell-hover)}
   .cell.red{background:rgba(244,63,94,.15);border-color:rgba(244,63,94,.25)}
   .cell.yel{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.25)}
@@ -900,9 +902,11 @@
         const kms=uniqNames([...(a.km_main||[]),...(a.km_support||[]),...(a.km_support2||[])]).join(", ")||"—";
         const cls=tierClass(rev);
         const todayCls=isCurrentMonth && now.getDate()===d?" today":"";
-        h+=`<div class="cell ${cls}${todayCls}"><div class="day" data-act="openDay" data-day="${d}">`;
+        const hasComment=String((state.dayComment||{})[d]||"").trim().length>0;
+        h+=`<div class="cell ${cls}${todayCls}"><div class="day${hasComment?" comment":""}" data-act="openDay" data-day="${d}">`;
         h+=`<div class="daytop"><div class="dnum">${d}</div><div class="drev">${rev?html(money(rev)):""}</div></div>`;
         h+=`<div class="small"><div>А: ${html(admins)}</div><div>КМ: ${html(kms)}</div></div>`;
+        if(hasComment) h+=`<span class="cmtBadge" title="Есть комментарий"></span>`;
         h+=`</div></div>`;
       }
       h+=`</div>`;
@@ -1002,7 +1006,9 @@
       h+=`<input class="inp miniIn" placeholder="Напитки" data-act="setInvA" data-key="drinks" value="${html(inv.admin.drinks)}">`;
       h+=`<input class="inp miniIn" placeholder="Пиво" data-act="setInvA" data-key="beer" value="${html(inv.admin.beer)}">`;
       h+=`<input class="inp miniIn" placeholder="Бар" data-act="setInvA" data-key="bar" value="${html(inv.admin.bar)}">`;
-      h+=`</div></div></div>`;
+      h+=`</div></div>`;
+      h+=`<div class="muted" style="margin-top:10px">Доплата старшему (${html(seniorAdminName||"—")}): ${html(money(seniorAdminExtra))}</div>`;
+      h+=`</div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
       h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:14%">Нач.</th><th class="r" style="width:10%">Плюс</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:16%">Итог</th>`;
