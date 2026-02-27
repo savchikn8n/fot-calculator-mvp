@@ -106,6 +106,9 @@
   .mid{font-size:13px;color:var(--text-mid)}
   .split{display:grid;gap:16px}
   @media (min-width:768px){.split{grid-template-columns:1fr 1fr}}
+  .settingsGrid{display:grid;gap:16px}
+  @media (min-width:1024px){.settingsGrid{grid-template-columns:minmax(0,2fr) minmax(280px,1fr)}}
+  .settingsLeft{display:grid;gap:12px}
   .section{border:1px solid var(--border);background:var(--surface-2);border-radius:18px;padding:14px}
   .secTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
   .secT{font-size:13px;font-weight:700;color:var(--text-strong)}
@@ -834,7 +837,7 @@
       return h;
     })();
 
-    const settings=(()=>{
+    const settingsRates=(()=>{
       const r=normalizeRates(state.rates);
       const tiers=[{id:"tier1",t:"< 50 000"},{id:"tier2",t:"50 000–69 999"},{id:"tier3",t:"≥ 70 000"}];
       let h=`<div class="card"><div class="card-h"><div><div class="t">Настройки</div><div class="st">Процентные ставки по тарифам</div></div></div><div class="card-b"><div class="row">`;
@@ -847,7 +850,10 @@
         h+=`</div></div>`;
       });
       h+=`</div></div></div>`;
-      h+=`<div class="card" style="margin-top:12px"><div class="card-h"><div><div class="t">Сотрудники</div><div class="st">Состав смен и должности</div></div></div><div class="card-b">`;
+      return h;
+    })();
+    const settingsStaff=(()=>{
+      let h=`<div class="card"><div class="card-h"><div><div class="t">Сотрудники</div><div class="st">Состав смен и должности</div></div></div><div class="card-b">`;
       h+=`<div class="tableWrap"><table><thead><tr><th style="width:48%">Фамилия и инициал</th><th style="width:38%">Должность</th><th class="r" style="width:14%"></th></tr></thead><tbody>`;
       state.staff.forEach((s,idx)=>{
         h+=`<tr>`;
@@ -1021,7 +1027,7 @@
     })();
 
     const main=(()=>{
-      if(state.view==="settings") return `<div class="split" style="grid-template-columns:2fr 1fr">${settings}<div>${legend}</div></div>`;
+      if(state.view==="settings") return `<div class="settingsGrid"><div class="settingsLeft">${settingsRates}${settingsStaff}</div><div>${legend}</div></div>`;
       return `<div class="row">${cal}${people}<div class="split">${manager}${totals}</div></div>`;
     })();
 
