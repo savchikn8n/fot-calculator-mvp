@@ -663,7 +663,7 @@
   const calcShiftCounts=()=>{
     const adminCounts={}; const kmCounts={};
     ADMINS.forEach(n=>adminCounts[n]=0);
-    KMS.forEach(n=>kmCounts[n]=0);
+    KMS.forEach(n=>kmCounts[n]={km_main:0,km_support:0,km_support2:0});
 
     const add=(rows,target,list)=>{
       (rows||[]).forEach(r=>{
@@ -674,6 +674,15 @@
         target[name]+=1;
       });
     };
+    const addKm=(rows,key)=>{
+      (rows||[]).forEach(r=>{
+        const raw=String((r&&r.name)||"").trim();
+        if(!raw) return;
+        const name=normalizePerson(raw,KMS) || LEGACY_NAME_MAP[raw] || raw;
+        if(!kmCounts[name]) return;
+        kmCounts[name][key]+=1;
+      });
+    };
 
     const days=dim();
     for(let d=1; d<=days; d++){
@@ -681,9 +690,9 @@
       const dt=new Date(state.year,state.month,d);
       const a=getDay(d,dt);
       add(a.admin,adminCounts,ADMINS);
-      add(a.km_main,kmCounts,KMS);
-      add(a.km_support,kmCounts,KMS);
-      add(a.km_support2,kmCounts,KMS);
+      addKm(a.km_main,"km_main");
+      addKm(a.km_support,"km_support");
+      addKm(a.km_support2,"km_support2");
     }
     return{adminCounts,kmCounts};
   };
@@ -906,9 +915,13 @@
       h+=`<div class="section"><div class="secT">Администраторы</div><div class="row" style="margin-top:10px">`;
       ADMINS.forEach(n=>{ h+=`<div class="lg"><div>${html(n)}</div><div class="chip">${sc.adminCounts[n]||0}</div></div>`; });
       h+=`</div></div>`;
-      h+=`<div class="section" style="margin-top:10px"><div class="secT">Кальянные мастера</div><div class="row" style="margin-top:10px">`;
-      KMS.forEach(n=>{ h+=`<div class="lg"><div>${html(n)}</div><div class="chip">${sc.kmCounts[n]||0}</div></div>`; });
-      h+=`</div></div>`;
+      h+=`<div class="section" style="margin-top:10px"><div class="secT">Кальянные мастера</div>`;
+      h+=`<div class="tableWrap" style="margin-top:10px"><table><thead><tr><th style="width:52%">Сотр.</th><th class="r" style="width:16%">КМ</th><th class="r" style="width:16%">КМс</th><th class="r" style="width:16%">КМс²</th></tr></thead><tbody>`;
+      KMS.forEach(n=>{
+        const c=sc.kmCounts[n]||{km_main:0,km_support:0,km_support2:0};
+        h+=`<tr><td class="tr">${html(n)}</td><td class="r">${c.km_main||0}</td><td class="r">${c.km_support||0}</td><td class="r">${c.km_support2||0}</td></tr>`;
+      });
+      h+=`</tbody></table></div></div>`;
       h+=`</div></div>`;
       return h;
     })();
