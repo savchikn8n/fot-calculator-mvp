@@ -146,9 +146,18 @@
   if(!el) return;
 
   const MONTHS=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
-  const ADMINS=["Кристина","Михаил","Дарья"];
-  const KMS=["Юра","Рудольф","Женя","Леонид","Дарья"];
-  const MANAGER_NAME="Дарья";
+  const ADMINS=["Слесарева К.","Григорьев М.","Павлова Д."];
+  const KMS=["Линиченко Ю.","Луя Р.","Золотарев Е.","Родин Л.","Павлова Д."];
+  const MANAGER_NAME="Павлова Д.";
+  const LEGACY_NAME_MAP={
+    "Кристина":"Слесарева К.",
+    "Михаил":"Григорьев М.",
+    "Дарья":"Павлова Д.",
+    "Юра":"Линиченко Ю.",
+    "Рудольф":"Луя Р.",
+    "Женя":"Золотарев Е.",
+    "Леонид":"Родин Л."
+  };
   const DEFAULT_RATES={
     tier1:{admin:"8",km_main:"10",km_support:"7",km_support2:"7"},
     tier2:{admin:"7.5",km_main:"9",km_support:"6",km_support2:"6"},
@@ -194,22 +203,27 @@
     const a=(inv&&inv.admin)||{}, k=(inv&&inv.km)||{};
     return{admin:{snacks:String(a.snacks??""),drinks:String(a.drinks??""),beer:String(a.beer??""),bar:String(a.bar??"")},km:{tobacco:String(k.tobacco??"")}};
   };
+  const pickPersonField=(src,name)=>{
+    if(src[name]!=null) return String(src[name]);
+    const legacy=Object.keys(LEGACY_NAME_MAP).find(k=>LEGACY_NAME_MAP[k]===name && src[k]!=null);
+    return legacy?String(src[legacy]):"";
+  };
   const normalizeAdv=adv=>{
     const base={}; [...ADMINS,...KMS].forEach(n=>base[n]="");
     const src=adv&&typeof adv==="object"?adv:{};
-    Object.keys(base).forEach(n=>base[n]=String(src[n]??""));
+    Object.keys(base).forEach(n=>base[n]=pickPersonField(src,n));
     return base;
   };
   const normalizeAdminSalary=sal=>{
     const base={}; ADMINS.forEach(n=>base[n]="");
     const src=sal&&typeof sal==="object"?sal:{};
-    ADMINS.forEach(n=>base[n]=String(src[n]??""));
+    ADMINS.forEach(n=>base[n]=pickPersonField(src,n));
     return base;
   };
   const normalizeBonus=bn=>{
     const base={}; [...ADMINS,...KMS].forEach(n=>base[n]="");
     const src=bn&&typeof bn==="object"?bn:{};
-    Object.keys(base).forEach(n=>base[n]=String(src[n]??""));
+    Object.keys(base).forEach(n=>base[n]=pickPersonField(src,n));
     return base;
   };
   const normalizeDayTextMap=x=>{
@@ -289,22 +303,29 @@
   };
   const canEdit=()=>!state.readOnly;
   const NAME_ALIASES={
-    "леня":"Леонид",
-    "лёня":"Леонид",
-    "леонид":"Леонид",
-    "рудик":"Рудольф",
-    "рудольф":"Рудольф",
-    "юра":"Юра",
-    "женя":"Женя",
-    "крис":"Кристина",
-    "кристина":"Кристина",
-    "миша":"Михаил",
-    "михаил":"Михаил",
-    "дарья":"Дарья",
-    "даша":"Дарья",
+    "леня":"Родин Л.",
+    "лёня":"Родин Л.",
+    "леонид":"Родин Л.",
+    "родинл":"Родин Л.",
+    "рудик":"Луя Р.",
+    "рудольф":"Луя Р.",
+    "луяр":"Луя Р.",
+    "юра":"Линиченко Ю.",
+    "линиченкою":"Линиченко Ю.",
+    "женя":"Золотарев Е.",
+    "золотареве":"Золотарев Е.",
+    "крис":"Слесарева К.",
+    "кристина":"Слесарева К.",
+    "слесаревак":"Слесарева К.",
+    "миша":"Григорьев М.",
+    "михаил":"Григорьев М.",
+    "григорьевм":"Григорьев М.",
+    "дарья":"Павлова Д.",
+    "даша":"Павлова Д.",
+    "павловад":"Павлова Д.",
   };
 
-  const cleanName=s=>String(s||"").trim().toLowerCase().replace(/\./g,"").replace(/ё/g,"е");
+  const cleanName=s=>String(s||"").trim().toLowerCase().replace(/\./g,"").replace(/\s+/g,"").replace(/ё/g,"е");
   const normalizePerson=(raw, list)=>{
     const k=cleanName(raw);
     const ali=NAME_ALIASES[k];
@@ -571,7 +592,7 @@
     loadMonth(key());
   };
 
-  const tierClass=rev=>rev>=70000?"grn":rev>=50000?"yel":"red";
+  const tierClass=rev=>rev>0?(rev>=70000?"grn":rev>=50000?"yel":"red"):"";
 
   const uniqNames=rows=>{
     const out=[]; const s=new Set();
@@ -767,7 +788,7 @@
 
       h+=`<div class="section"><div class="secTop"><div><div class="secT">Кальянные мастера</div><div class="secS">Инвентаризация: ${html(money(kmInv))} · по ${html(money(kmShare))}</div></div>`;
       h+=`<div style="width:min(280px,100%)">`;
-      h+=`<div class="muted" style="margin-bottom:6px">Доплата старшему (Юра)</div>`;
+      h+=`<div class="muted" style="margin-bottom:6px">Доплата старшему (Линиченко Ю.)</div>`;
       h+=`<input class="inp miniIn" data-act="setSeniorKm" value="${html(state.seniorKm||"")}">`;
       h+=`<div style="margin-top:10px"><input class="inp miniIn" placeholder="Табак" data-act="setInvK" value="${html(inv.km.tobacco)}"></div>`;
       h+=`</div></div>`;
@@ -895,7 +916,7 @@
       };
 
       let h=`<div class="modal ${open?"on":""}" id="fot-modal"><div class="back" data-act="closeModal"></div><div class="sheet"><div class="dialog">`;
-      h+=`<div class="dlgH"><div><div class="t">${open?`Редактор дня · ${state.year}-${pad2(state.month+1)}-${pad2(d)} (${wd(dt.getDay())})`:"Редактор дня"}</div>`;
+      h+=`<div class="dlgH"><div><div class="t">${open?`Редактор дня · ${pad2(d)}/${pad2(state.month+1)}/${state.year} (${wd(dt.getDay())})`:"Редактор дня"}</div>`;
       h+=`<div class="st">${open?`Тариф: ${tier.name} · Выручка: ${money(rev)} · Роли: ${money(totals.admin+totals.km_main+totals.km_support+totals.km_support2)}`:""}</div></div>`;
       h+=`<button class="btn ghost" data-act="closeModal">Закрыть</button></div>`;
       h+=`<div class="dlgB">`;
