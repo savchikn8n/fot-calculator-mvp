@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>FOT legacy</title>
-  <style>html,body{margin:0;height:100%;background:#09090b}</style>
+  <style>html,body{margin:0;height:100%;background:#09090b;overflow-x:hidden}</style>
 </head>
 <body>
   <div id="fot-app"></div>
@@ -154,6 +154,55 @@
   .pTop{font-weight:800;color:var(--text-strong);font-variant-numeric:tabular-nums}
   .pSub{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums;margin-top:4px}
   .hint{font-size:11px;color:var(--text-muted);margin-top:10px}
+  @media (max-width:900px){
+    .bg{overflow-x:hidden}
+    .wrap{padding:12px}
+    .grid,.min,.card,.card-h,.card-b,.section,.tableWrap,.role,.dialog{min-width:0}
+    .card{border-radius:18px}
+    .card-h{padding:14px 14px 8px;flex-direction:column;align-items:stretch;gap:10px}
+    .card-b{padding:0 14px 14px}
+    .card-h > div:last-child{display:flex;gap:8px;flex-wrap:wrap}
+    .card-h > div:last-child .btn{flex:1}
+    .btn{padding:10px 12px}
+
+    .cal-head{gap:4px;font-size:10px}
+    .cal-grid{gap:4px}
+    .cell{height:76px;border-radius:12px}
+    .day{padding:7px 8px}
+    .dnum{font-size:18px}
+    .drev{font-size:10px}
+    .small{display:none}
+    .cal-nav{gap:8px}
+    .cal-nav .btn{min-width:0;padding:10px}
+    .cal-nav .mid{font-size:12px;text-align:center}
+
+    .tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .tableWrap table{min-width:640px;font-size:12px}
+    th,td{padding:8px 9px}
+
+    .sheet{padding:8px}
+    .dialog{border-radius:18px;max-width:100%}
+    .dlgH{padding:12px;gap:8px;flex-direction:column;align-items:stretch}
+    .dlgB{padding:12px}
+    .dlgH .t,.dlgH .st{white-space:normal}
+    .dlgH > div:last-child{display:flex;gap:8px}
+    .dlgH > div:last-child .btn{flex:1}
+    .dlgB .row2{grid-template-columns:1fr !important}
+    .role{padding:10px;border-radius:14px}
+    .roleTop{flex-direction:column;align-items:stretch}
+    .roleTop .add{width:100%}
+    .role .rgrid.muted{display:none}
+    .rgrid{margin-top:8px;grid-template-columns:86px minmax(0,1fr) 72px 72px;gap:6px}
+    .col2,.col4{grid-column:auto}
+    .del,.add{padding:9px 8px;font-size:12px}
+    .payout{grid-column:1 / -1;text-align:left}
+    .pTop{font-size:26px}
+    .pSub{font-size:12px}
+    .sel,.inp,.ta{font-size:16px}
+
+    .cnt{width:38px;height:38px;font-size:13px}
+    .cntRow,.cntHdr{grid-template-columns:repeat(3,38px);gap:8px}
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -207,6 +256,7 @@
   const n0=x=>{const v=Number(numStr(x));return Number.isFinite(v)?Math.max(0,v):0;};
   const m0=x=>{const v=Number(numStr(x));return Number.isFinite(v)?v:0;};
   const h0=x=>{const v=Number(numStr(x));return Number.isFinite(v)?Math.max(0,v):0;};
+  const isMobileView=()=>window.matchMedia("(max-width:900px)").matches;
   const money=n=>Number.isFinite(n)
     ?new Intl.NumberFormat("ru-RU",{style:"currency",currency:"RUB",maximumFractionDigits:0}).format(Math.round(n))
     :"—";
@@ -1730,6 +1780,20 @@
       applyStaffUpdate(next);
       return;
     }
+    if(t.matches("input[data-act='setDayRevenue']")){
+      const d=state.activeDay; if(!d) return;
+      state.rev={...state.rev,[d]:t.value};
+      scheduleSave();
+      render();
+      return;
+    }
+    if(t.matches("input[data-act='setDayUnpaid']")){
+      const d=state.activeDay; if(!d) return;
+      state.unpaid={...state.unpaid,[d]:t.value};
+      scheduleSave();
+      render();
+      return;
+    }
     if(t.matches("input[data-act='setStaffName']")){
       const idx=Number(t.getAttribute("data-idx"));
       if(idx<0 || idx>=state.staff.length) return;
@@ -1788,6 +1852,7 @@
       const d=state.activeDay; if(!d) return;
       state.rev={...state.rev,[d]:t.value};
       scheduleSave();
+      if(isMobileView()) return;
       renderKeepFocus();
       return;
     }
@@ -1795,6 +1860,7 @@
       const d=state.activeDay; if(!d) return;
       state.unpaid={...state.unpaid,[d]:t.value};
       scheduleSave();
+      if(isMobileView()) return;
       renderKeepFocus();
       return;
     }
