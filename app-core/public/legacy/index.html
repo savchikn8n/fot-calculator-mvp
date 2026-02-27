@@ -1668,7 +1668,16 @@
       const day=state.asgn[d];
       const arr=(day[role]||[]).slice();
       if(idx>=0 && idx<arr.length) arr.splice(idx,1);
-      setAssignDay(d,{...day,[role]:arr});
+      const dt=new Date(state.year,state.month,d);
+      const total=defHours(role,dt);
+      let nextRows=arr;
+      if(arr.length===1){
+        nextRows=[{...arr[0],hours:fmtHours(total)}];
+      }else if(arr.length>1){
+        const share=total/arr.length;
+        nextRows=arr.map(r=>({...r,hours:fmtHours(share)}));
+      }
+      setAssignDay(d,{...day,[role]:nextRows});
       render();
       return;
     }
