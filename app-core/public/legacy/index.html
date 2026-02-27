@@ -389,6 +389,7 @@
     scheduleError:"",
     staff:normalizeStaff(STAFF_DEFAULT),
     confirmRemoveStaffIdx:null,
+    confirmClearDay:false,
   };
   const canEdit=()=>!state.readOnly;
   const syncRoleLists=()=>{
@@ -1122,7 +1123,10 @@
       let h=`<div class="modal ${open?"on":""}" id="fot-modal"><div class="back" data-act="closeModal"></div><div class="sheet"><div class="dialog">`;
       h+=`<div class="dlgH"><div><div class="t">${open?`Редактор дня · ${pad2(d)}/${pad2(state.month+1)}/${state.year} (${wd(dt.getDay())})`:"Редактор дня"}</div>`;
       h+=`<div class="st">${open?`Тариф: ${tier.name} · Выручка: ${money(rev)} · Роли: ${money(totals.admin+totals.km_main+totals.km_support+totals.km_support2)}`:""}</div></div>`;
-      h+=`<button class="btn ghost" data-act="closeModal">Закрыть</button></div>`;
+      h+=`<div style="display:flex;gap:8px;align-items:center">`;
+      h+=`<button class="btn contrast" data-act="clearDay" ${state.readOnly?"disabled":""}>Очистить день</button>`;
+      h+=`<button class="btn ghost" data-act="closeModal">Закрыть</button>`;
+      h+=`</div></div>`;
       h+=`<div class="dlgB">`;
 
       if(open){
@@ -1152,13 +1156,18 @@
       let h=`<div class="modal on" id="fot-clear-modal"><div class="back" data-act="cancelClear"></div><div class="sheet"><div class="dialog" style="max-width:560px"><div class="dlgH"><div><div class="t">Подтверждение</div><div class="st">Вы уверены, что хотите удалить данные?</div></div></div><div class="dlgB"><div class="row2"><button class="btn contrast" data-act="cancelClear">Отмена</button><button class="btn primary" data-act="confirmClear">Подтвердить</button></div></div></div></div></div>`;
       return h;
     })();
+    const clearDayModal=(()=>{
+      if(!state.confirmClearDay) return "";
+      let h=`<div class="modal on" id="fot-clear-day-modal"><div class="back" data-act="cancelClearDay"></div><div class="sheet"><div class="dialog" style="max-width:560px"><div class="dlgH"><div><div class="t">Подтверждение</div><div class="st">Вы уверены, что хотите удалить данные этого дня?</div></div></div><div class="dlgB"><div class="row2"><button class="btn contrast" data-act="cancelClearDay">Отмена</button><button class="btn primary" data-act="confirmClearDay">Подтвердить</button></div></div></div></div></div>`;
+      return h;
+    })();
     const removeStaffModal=(()=>{
       if(state.confirmRemoveStaffIdx==null) return "";
       let h=`<div class="modal on" id="fot-remove-staff-modal"><div class="back" data-act="cancelRemoveStaff"></div><div class="sheet"><div class="dialog" style="max-width:560px"><div class="dlgH"><div><div class="t">Подтверждение</div><div class="st">Вы точно хотите удалить сотрудника?</div></div></div><div class="dlgB"><div class="row2"><button class="btn contrast" data-act="cancelRemoveStaff">Отмена</button><button class="btn primary" data-act="confirmRemoveStaff">Подтвердить</button></div></div></div></div></div>`;
       return h;
     })();
 
-    el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}${clearModal}${removeStaffModal}</div>`;
+    el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}${clearModal}${clearDayModal}${removeStaffModal}</div>`;
     if(state.readOnly){
       const selectors=[
         "button[data-act='clearMonth']",
@@ -1402,7 +1411,7 @@
       return;
     }
 
-    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear","applySchedule","addStaff","removeStaff","confirmRemoveStaff"].includes(act)) return;
+    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear","applySchedule","addStaff","removeStaff","confirmRemoveStaff","clearDay","confirmClearDay"].includes(act)) return;
 
     if(act==="setView"){
       const nextView=t.getAttribute("data-view");
@@ -1443,6 +1452,51 @@
     }
     if(act==="confirmClear"){
       state.rev={}; state.unpaid={}; state.asgn={}; state.dayComment={}; state.activeDay=null; state.confirmClear=false;
+      scheduleSave();
+      render();
+      return;
+    }
+    if(act==="clearDay"){
+      if(state.activeDay==null) return;
+      state.confirmClearDay=true;
+      render();
+      return;
+    }
+    if(act==="cancelClearDay"){
+      state.confirmClearDay=false;
+      render();
+      return;
+    }
+    if(act==="confirmClearDay"){
+      const d=state.activeDay;
+      state.confirmClearDay=false;
+      if(d==null){ render(); return; }
+      const nextRev={...state.rev}; delete nextRev[d];
+      const nextUnpaid={...state.unpaid}; delete nextUnpaid[d];
+      const dt=new Date(state.year,state.month,d);
+      const day=state.asgn[d]||defDay(dt);
+      const keepOne=(rows,role)=>{
+        const rr=Array.isArray(rows)&&rows.length?rows:[];
+        if(rr.length===0){
+          const baseName=(role==="admin"?ADMINS[0]:KMS[0]);
+          return [{name:baseName,hours:String(defHours(role,dt)),breakage:""}];
+        }
+        const first=rr[0]||{};
+        const fallback=(role==="admin"?ADMINS[0]:KMS[0]);
+        return [{name:String(first.name||fallback),hours:String(defHours(role,dt)),breakage:""}];
+      };
+      const nextDay={
+        admin:keepOne(day.admin,"admin"),
+        km_main:keepOne(day.km_main,"km_main"),
+        km_support:keepOne(day.km_support,"km_support"),
+        km_support2:isFriSat(dt)?keepOne(day.km_support2,"km_support2"):[],
+      };
+      const nextAsgn={...state.asgn,[d]:nextDay};
+      const nextComment={...state.dayComment}; delete nextComment[d];
+      state.rev=nextRev;
+      state.unpaid=nextUnpaid;
+      state.asgn=nextAsgn;
+      state.dayComment=nextComment;
       scheduleSave();
       render();
       return;
