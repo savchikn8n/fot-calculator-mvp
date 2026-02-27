@@ -1002,9 +1002,9 @@
       let h=`<div class="card"><div class="card-h"><div><div class="t">Сводка сотрудников</div><div class="st">Авансы/премии/инвентаризация/доплаты</div></div></div><div class="card-b"><div class="row">`;
 
       h+=`<div class="section"><div class="secTop"><div><div class="secT">Администраторы</div><div class="secS">Инвентаризация: ${html(money(adminInv))} · по ${html(money(adminShare))}</div></div>`;
-      h+=`</div>`;
-      h+=`<div class="muted" style="margin-top:10px">Доплата старшему (${html(seniorAdminName||"—")}): ${html(money(seniorAdminExtra))}</div>`;
-      h+=`<div style="width:min(280px,100%);margin-left:auto;margin-top:10px"><div class="row2">`;
+      h+=`<div style="width:min(320px,100%)">`;
+      h+=`<div class="muted" style="margin-bottom:6px">Доплата старшему (${html(seniorAdminName||"—")}): ${html(money(seniorAdminExtra))}</div>`;
+      h+=`<div class="row2">`;
       h+=`<input class="inp miniIn" placeholder="Снэки" data-act="setInvA" data-key="snacks" value="${html(inv.admin.snacks)}">`;
       h+=`<input class="inp miniIn" placeholder="Напитки" data-act="setInvA" data-key="drinks" value="${html(inv.admin.drinks)}">`;
       h+=`<input class="inp miniIn" placeholder="Пиво" data-act="setInvA" data-key="beer" value="${html(inv.admin.beer)}">`;
@@ -1218,7 +1218,7 @@
       return h;
     })();
 
-    el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}${clearModal}${clearDayModal}${removeStaffModal}</div>`;
+    el.innerHTML=`<div class="theme-${state.theme}"><div class="bg"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}${clearModal}${clearDayModal}${removeStaffModal}</div></div>`;
     if(state.readOnly){
       const selectors=[
         "button[data-act='clearMonth']",
