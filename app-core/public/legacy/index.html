@@ -261,18 +261,22 @@
   const normalizeStaff=arr=>{
     const src=Array.isArray(arr)&&arr.length?arr:STAFF_DEFAULT;
     const out=src.map((s,idx)=>{
+      const isDraft=!!(s&&s.isDraft);
       const f=formatStaffName((s&&s.fullName)||s&&s.name||"");
       const roleRaw=String((s&&s.role)||"").trim();
       const role=(roleRaw==="admin"||roleRaw==="km"||roleRaw==="senior_admin"||roleRaw==="senior_km")?roleRaw:"km";
+      const rawName=(s&&s.name&&String(s.name).trim())||"";
+      const rawFull=(s&&s.fullName&&String(s.fullName).trim())||"";
       return{
         id:String((s&&s.id)||`staff-${idx}-${Date.now()}`),
-        name:(s&&s.name&&String(s.name).trim())||f.display||`Сотрудник ${idx+1}`,
-        fullName:(s&&s.fullName&&String(s.fullName).trim())||f.full||((s&&s.name&&String(s.name).trim())||""),
+        name:rawName||(isDraft?"":(f.display||`Сотрудник ${idx+1}`)),
+        fullName:rawFull||(isDraft?"":(f.full||rawName)),
         role,
-        active:s&&s.active===false?false:true
+        active:s&&s.active===false?false:true,
+        isDraft
       };
     });
-    return out.filter(s=>s.active!==false && String(s.name||"").trim());
+    return out.filter(s=>s.active!==false && (s.isDraft || String(s.name||"").trim()));
   };
 
   const defDay=dt=>({
@@ -383,6 +387,7 @@
     scheduleStatus:"",
     scheduleError:"",
     staff:normalizeStaff(STAFF_DEFAULT),
+    confirmRemoveStaffIdx:null,
   };
   const canEdit=()=>!state.readOnly;
   const syncRoleLists=()=>{
@@ -892,7 +897,11 @@
       h+=`<div class="tableWrap"><table><thead><tr><th style="width:48%">Фамилия и инициал</th><th style="width:38%">Должность</th><th class="r" style="width:14%"></th></tr></thead><tbody>`;
       state.staff.forEach((s,idx)=>{
         h+=`<tr>`;
-        h+=`<td><input class="inp miniIn" style="text-align:left" data-act="setStaffName" data-idx="${idx}" value="${html(s.name||"")}"></td>`;
+        if(s.isDraft){
+          h+=`<td><input class="inp miniIn" style="text-align:left" data-act="setStaffName" data-idx="${idx}" value="${html(s.fullName||"")}" placeholder="Фамилия Имя"></td>`;
+        }else{
+          h+=`<td>${html(s.name||"—")}</td>`;
+        }
         h+=`<td><select class="sel miniIn" data-act="setStaffRole" data-idx="${idx}">`;
         h+=`<option value="admin" ${s.role==="admin"?"selected":""}>Администратор</option>`;
         h+=`<option value="senior_admin" ${s.role==="senior_admin"?"selected":""}>Старший Администратор</option>`;
@@ -1139,8 +1148,13 @@
       let h=`<div class="modal on" id="fot-clear-modal"><div class="back" data-act="cancelClear"></div><div class="sheet"><div class="dialog" style="max-width:560px"><div class="dlgH"><div><div class="t">Подтверждение</div><div class="st">Вы уверены, что хотите удалить данные?</div></div></div><div class="dlgB"><div class="row2"><button class="btn contrast" data-act="cancelClear">Отмена</button><button class="btn primary" data-act="confirmClear">Подтвердить</button></div></div></div></div></div>`;
       return h;
     })();
+    const removeStaffModal=(()=>{
+      if(state.confirmRemoveStaffIdx==null) return "";
+      let h=`<div class="modal on" id="fot-remove-staff-modal"><div class="back" data-act="cancelRemoveStaff"></div><div class="sheet"><div class="dialog" style="max-width:560px"><div class="dlgH"><div><div class="t">Подтверждение</div><div class="st">Вы точно хотите удалить сотрудника?</div></div></div><div class="dlgB"><div class="row2"><button class="btn contrast" data-act="cancelRemoveStaff">Отмена</button><button class="btn primary" data-act="confirmRemoveStaff">Подтвердить</button></div></div></div></div></div>`;
+      return h;
+    })();
 
-    el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}${clearModal}</div>`;
+    el.innerHTML=`<div class="bg theme-${state.theme}"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}${clearModal}${removeStaffModal}</div>`;
     if(state.readOnly){
       const selectors=[
         "button[data-act='clearMonth']",
@@ -1384,10 +1398,25 @@
       return;
     }
 
-    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear","applySchedule","addStaff","removeStaff"].includes(act)) return;
+    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear","applySchedule","addStaff","removeStaff","confirmRemoveStaff"].includes(act)) return;
 
     if(act==="setView"){
-      state.view=t.getAttribute("data-view");
+      const nextView=t.getAttribute("data-view");
+      if(state.view==="settings" && nextView!=="settings"){
+        const committed=(state.staff||[])
+          .map(s=>{
+            if(!s || !s.isDraft) return s;
+            const raw=(s.fullName||s.name||"").trim();
+            if(!raw) return null;
+            const f=formatStaffName(raw);
+            return {...s,name:f.display||raw,fullName:f.full||raw,isDraft:false};
+          })
+          .filter(Boolean);
+        state.staff=normalizeStaff(committed);
+        syncRoleLists();
+        scheduleSave();
+      }
+      state.view=nextView;
       state.activeDay=null;
       render();
       return;
@@ -1419,13 +1448,26 @@
       return;
     }
     if(act==="addStaff"){
-      const next=[...state.staff,{id:`staff-${Date.now()}`,name:"Новый С.",fullName:"Новый Сотрудник",role:"km",active:true}];
+      const next=[...state.staff,{id:`staff-${Date.now()}`,name:"",fullName:"",role:"km",active:true,isDraft:true}];
       applyStaffUpdate(next);
       return;
     }
     if(act==="removeStaff"){
       const idx=Number(t.getAttribute("data-idx"));
       if(idx<0 || idx>=state.staff.length) return;
+      state.confirmRemoveStaffIdx=idx;
+      render();
+      return;
+    }
+    if(act==="cancelRemoveStaff"){
+      state.confirmRemoveStaffIdx=null;
+      render();
+      return;
+    }
+    if(act==="confirmRemoveStaff"){
+      const idx=state.confirmRemoveStaffIdx==null?-1:Number(state.confirmRemoveStaffIdx);
+      state.confirmRemoveStaffIdx=null;
+      if(idx<0 || idx>=state.staff.length){ render(); return; }
       const next=state.staff.slice();
       next.splice(idx,1);
       applyStaffUpdate(next);
