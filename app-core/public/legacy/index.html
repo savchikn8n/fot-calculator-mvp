@@ -96,7 +96,7 @@
   .muted{color:var(--text-muted);font-size:12px}
   .cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;font-size:11px;color:var(--text-muted)}
   .cal-grid{margin-top:8px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-  .cell{height:80px;border-radius:18px;border:1px solid var(--border);background:var(--cell-bg);overflow:hidden}
+  .cell{height:96px;border-radius:18px;border:1px solid var(--border);background:var(--cell-bg);overflow:hidden}
   .cell.today{box-shadow:inset 0 0 0 2px #facc15}
   .day{height:100%;border-radius:inherit;padding:10px 12px;cursor:pointer;user-select:none;transition:background .15s}
   .day.comment{position:relative;padding-bottom:22px}
@@ -400,6 +400,7 @@
     staff:normalizeStaff(STAFF_DEFAULT),
     confirmRemoveStaffIdx:null,
     confirmClearDay:false,
+    undoClear:null,
   };
   const canEdit=()=>!state.readOnly;
   const syncRoleLists=()=>{
@@ -889,7 +890,7 @@
       const total=Math.ceil((start+days)/7)*7;
       const now=new Date();
       const isCurrentMonth=now.getFullYear()===state.year && now.getMonth()===state.month;
-      let h=`<div class="card"><div class="card-h"><div><div class="t">Календарь</div><div class="st">Клик по дню — открыть редактор</div></div><button class="btn ghost" data-act="clearMonth" ${state.readOnly?"disabled":""}>Очистить месяц</button></div><div class="card-b">`;
+      let h=`<div class="card"><div class="card-h"><div><div class="t">Календарь</div><div class="st">Клик по дню — открыть редактор</div></div><div style="display:flex;gap:8px;align-items:center"><button class="btn ghost" data-act="undoClear" ${state.readOnly||!state.undoClear?"disabled":""}>Отменить</button><button class="btn ghost" data-act="clearMonth" ${state.readOnly?"disabled":""}>Очистить месяц</button></div></div><div class="card-b">`;
       h+=`<div class="cal-head">${WEEKDAYS.map(w=>`<div>${w}</div>`).join("")}</div>`;
       h+=`<div class="cal-grid">`;
       for(let i=0;i<total;i++){
@@ -1001,13 +1002,14 @@
       let h=`<div class="card"><div class="card-h"><div><div class="t">Сводка сотрудников</div><div class="st">Авансы/премии/инвентаризация/доплаты</div></div></div><div class="card-b"><div class="row">`;
 
       h+=`<div class="section"><div class="secTop"><div><div class="secT">Администраторы</div><div class="secS">Инвентаризация: ${html(money(adminInv))} · по ${html(money(adminShare))}</div></div>`;
-      h+=`<div style="width:min(280px,100%)"><div class="row2">`;
+      h+=`</div>`;
+      h+=`<div class="muted" style="margin-top:10px">Доплата старшему (${html(seniorAdminName||"—")}): ${html(money(seniorAdminExtra))}</div>`;
+      h+=`<div style="width:min(280px,100%);margin-left:auto;margin-top:10px"><div class="row2">`;
       h+=`<input class="inp miniIn" placeholder="Снэки" data-act="setInvA" data-key="snacks" value="${html(inv.admin.snacks)}">`;
       h+=`<input class="inp miniIn" placeholder="Напитки" data-act="setInvA" data-key="drinks" value="${html(inv.admin.drinks)}">`;
       h+=`<input class="inp miniIn" placeholder="Пиво" data-act="setInvA" data-key="beer" value="${html(inv.admin.beer)}">`;
       h+=`<input class="inp miniIn" placeholder="Бар" data-act="setInvA" data-key="bar" value="${html(inv.admin.bar)}">`;
       h+=`</div></div>`;
-      h+=`<div class="muted" style="margin-top:10px">Доплата старшему (${html(seniorAdminName||"—")}): ${html(money(seniorAdminExtra))}</div>`;
       h+=`</div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
@@ -1461,7 +1463,7 @@
       return;
     }
 
-    if(state.readOnly && ["clearMonth","addRow","delRow","confirmClear","applySchedule","addStaff","removeStaff","confirmRemoveStaff","clearDay","confirmClearDay"].includes(act)) return;
+    if(state.readOnly && ["clearMonth","undoClear","addRow","delRow","confirmClear","applySchedule","addStaff","removeStaff","confirmRemoveStaff","clearDay","confirmClearDay"].includes(act)) return;
 
     if(act==="setView"){
       const nextView=t.getAttribute("data-view");
@@ -1501,6 +1503,13 @@
       return;
     }
     if(act==="confirmClear"){
+      state.undoClear={
+        kind:"month",
+        rev:{...state.rev},
+        unpaid:{...state.unpaid},
+        asgn:JSON.parse(JSON.stringify(state.asgn||{})),
+        dayComment:{...state.dayComment}
+      };
       state.rev={}; state.unpaid={}; state.asgn={}; state.dayComment={}; state.activeDay=null; state.confirmClear=false;
       scheduleSave();
       render();
@@ -1521,6 +1530,18 @@
       const d=state.activeDay;
       state.confirmClearDay=false;
       if(d==null){ render(); return; }
+      state.undoClear={
+        kind:"day",
+        day:d,
+        hadRev:Object.prototype.hasOwnProperty.call(state.rev,d),
+        revValue:state.rev[d],
+        hadUnpaid:Object.prototype.hasOwnProperty.call(state.unpaid,d),
+        unpaidValue:state.unpaid[d],
+        hadAsgn:Object.prototype.hasOwnProperty.call(state.asgn,d),
+        asgnValue:JSON.parse(JSON.stringify(state.asgn[d]||null)),
+        hadComment:Object.prototype.hasOwnProperty.call(state.dayComment,d),
+        commentValue:state.dayComment[d]
+      };
       const nextRev={...state.rev}; delete nextRev[d];
       const nextUnpaid={...state.unpaid}; delete nextUnpaid[d];
       const dt=new Date(state.year,state.month,d);
@@ -1547,6 +1568,27 @@
       state.unpaid=nextUnpaid;
       state.asgn=nextAsgn;
       state.dayComment=nextComment;
+      scheduleSave();
+      render();
+      return;
+    }
+    if(act==="undoClear"){
+      const u=state.undoClear;
+      if(!u){ render(); return; }
+      if(u.kind==="month"){
+        state.rev=u.rev||{};
+        state.unpaid=u.unpaid||{};
+        state.asgn=u.asgn||{};
+        state.dayComment=u.dayComment||{};
+      }else if(u.kind==="day"){
+        const d=u.day;
+        const nextRev={...state.rev}; if(u.hadRev) nextRev[d]=u.revValue; else delete nextRev[d];
+        const nextUnpaid={...state.unpaid}; if(u.hadUnpaid) nextUnpaid[d]=u.unpaidValue; else delete nextUnpaid[d];
+        const nextAsgn={...state.asgn}; if(u.hadAsgn) nextAsgn[d]=u.asgnValue; else delete nextAsgn[d];
+        const nextComment={...state.dayComment}; if(u.hadComment) nextComment[d]=u.commentValue; else delete nextComment[d];
+        state.rev=nextRev; state.unpaid=nextUnpaid; state.asgn=nextAsgn; state.dayComment=nextComment;
+      }
+      state.undoClear=null;
       scheduleSave();
       render();
       return;
