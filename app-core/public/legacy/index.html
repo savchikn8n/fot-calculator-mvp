@@ -34,6 +34,8 @@
     --cell-bg:rgba(9,9,11,.25);
     --cell-hover:rgba(9,9,11,.45);
     --thead-bg:rgba(9,9,11,.6);
+    --total-bg:rgba(250,204,21,.22);
+    --total-text:#fef08a;
   }
   #fot-app .theme-light{
     --bg:#f5f7fb;
@@ -59,6 +61,8 @@
     --cell-bg:#f8fafc;
     --cell-hover:rgba(17,24,39,.08);
     --thead-bg:#f3f4f6;
+    --total-bg:rgba(234,179,8,.18);
+    --total-text:#854d0e;
   }
   #fot-app *{box-sizing:border-box}
   .bg{min-height:100vh;background:var(--bg);color:var(--text)}
@@ -121,6 +125,7 @@
   tfoot td{background:var(--thead-bg);font-weight:800;color:var(--text-strong)}
   td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
   td.tr{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .totalCell{background:var(--total-bg);color:var(--total-text);font-weight:900}
   .miniIn{padding:8px 10px;border-radius:12px}
   .modal{position:fixed;inset:0;z-index:99999;display:none}
   .modal.on{display:block}
@@ -182,6 +187,9 @@
   const STORAGE_KEY="tilda:fot:store:v15";
   const THEME_KEY="tilda:fot:theme:v1";
   const CONFIG_WAIT_MS=120;
+  const MANAGER_PCT=5;
+  const SENIOR_ADMIN_PCT=1;
+  const SENIOR_KM_PCT=1;
 
   const pad2=n=>String(n).padStart(2,"0");
   const monthKey=(y,m)=>`${y}-${pad2(m+1)}`;
@@ -308,7 +316,7 @@
     }
 
     const idx=Math.max(0,Math.min(rr.length-1,editedIdx));
-    const edited=Math.max(0,Math.min(target,Number(newHours)||0));
+    const edited=Math.max(0,Math.min(target,h0(newHours)));
     rr[idx].hours=fmtHours(edited);
 
     const restIdx=[];
@@ -462,6 +470,35 @@
     seniorKm:String((d&&d.seniorKm)??""),
     dayComment:normalizeDayTextMap(d&&d.dayComment),
   });
+  const normalizeAssignRows=(rows,list,role,dt)=>{
+    const src=Array.isArray(rows)?rows:[];
+    const out=src.map(r=>{
+      const nm=normalizePerson((r&&r.name)||"",list) || (list[0]||"");
+      return{
+        name:nm,
+        hours:String((r&&r.hours)!==undefined?(r&&r.hours):defHours(role,dt)),
+        breakage:String((r&&r.breakage)!==undefined?(r&&r.breakage):""),
+      };
+    }).filter(r=>r.name);
+    return out;
+  };
+  const normalizeAssignsForMonth=(asgn,y,m)=>{
+    const src=asgn&&typeof asgn==="object"?asgn:{};
+    const out={};
+    Object.keys(src).forEach(k=>{
+      const d=Number(k);
+      if(!Number.isFinite(d) || d<1 || d>31) return;
+      const dt=new Date(y,m,d);
+      const day=src[k]||{};
+      out[d]={
+        admin:normalizeAssignRows(day.admin,ADMINS,"admin",dt),
+        km_main:normalizeAssignRows(day.km_main,KMS,"km_main",dt),
+        km_support:normalizeAssignRows(day.km_support,KMS,"km_support",dt),
+        km_support2:isFriSat(dt)?normalizeAssignRows(day.km_support2,KMS,"km_support2",dt):[],
+      };
+    });
+    return out;
+  };
 
   const tierFrom=r=>r>=70000?{id:"tier3",name:"≥ 70 000"}:r>=50000?{id:"tier2",name:"50 000–69 999"}:{id:"tier1",name:"< 50 000"};
 
@@ -691,7 +728,7 @@
     }
     state.rev=d.rev||{};
     state.unpaid=d.unpaid||{};
-    state.asgn=d.asgn||{};
+    state.asgn=normalizeAssignsForMonth(d.asgn||{},state.year,state.month);
     state.adv=normalizeAdv(d.adv);
     state.bonus=normalizeBonus(d.bonus);
     state.inv=normalizeInv(d.inv);
@@ -744,8 +781,10 @@
     }
     const revenue=rawRevenue+unpaidRevenue;
     const bonusSum=[...new Set([...ADMINS,...KMS])].reduce((a,name)=>a+Math.max(0,m0(state.bonus[name])),0);
-    const managerPay=(revenue*n0(state.manager.percent)/100)+Math.max(0,m0(state.manager.seniorBonus));
-    fotNet+=bonusSum+managerPay;
+    const managerPay=revenue*MANAGER_PCT/100;
+    const seniorAdminPay=revenue*SENIOR_ADMIN_PCT/100;
+    const seniorKmPay=revenue*SENIOR_KM_PCT/100;
+    fotNet+=bonusSum+managerPay+seniorAdminPay+seniorKmPay;
     return{rawRevenue,unpaidRevenue,revenue,fotNet};
   };
 
@@ -928,14 +967,19 @@
       const kmInv=n0(inv.km.tobacco);
       const adminShare=ADMINS.length?adminInv/ADMINS.length:0;
       const kmShare=KMS.length?kmInv/KMS.length:0;
+      const seniorAdminName=(state.staff.find(s=>s.role==="senior_admin")||{}).name||"";
+      const seniorKmName=(state.staff.find(s=>s.role==="senior_km")||{}).name||"";
+      const seniorAdminExtra=mt.revenue*SENIOR_ADMIN_PCT/100;
+      const seniorKmExtra=mt.revenue*SENIOR_KM_PCT/100;
 
       const adminRows=ADMINS.map(name=>{
         const gross=(pt.adminTotals[name]||{}).gross||0;
         const boj=(pt.adminTotals[name]||{}).breakage||0;
         const adv=Math.max(0,m0(state.adv[name]));
         const bonus=Math.max(0,m0(state.bonus[name]));
-        const net=gross - boj - adv + bonus - adminShare;
-        return{ name,gross,boj,adv,bonus,net };
+        const extra=name===seniorAdminName?seniorAdminExtra:0;
+        const net=gross - boj - adv + bonus - adminShare + extra;
+        return{ name,gross,boj,adv,bonus,extra,net };
       });
 
       const kmRows=KMS.map(name=>{
@@ -943,8 +987,9 @@
         const boj=(pt.kmTotals[name]||{}).breakage||0;
         const adv=Math.max(0,m0(state.adv[name]));
         const bonus=Math.max(0,m0(state.bonus[name]));
-        const net=gross - boj - adv + bonus - kmShare;
-        return{ name,gross,boj,adv,bonus,net };
+        const extra=name===seniorKmName?seniorKmExtra:0;
+        const net=gross - boj - adv + bonus - kmShare + extra;
+        return{ name,gross,boj,adv,bonus,extra,net };
       });
 
       const sum=(arr,k)=>arr.reduce((a,r)=>a+(r[k]||0),0);
@@ -960,60 +1005,58 @@
       h+=`</div></div></div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
-      h+=`<th style="width:28%">Сотр.</th><th class="r" style="width:14%">Нач.</th><th class="r" style="width:14%">Бой</th><th class="r" style="width:14%">Аванс</th><th class="r" style="width:14%">Премия</th><th class="r" style="width:16%">Итог</th>`;
+      h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:14%">Нач.</th><th class="r" style="width:10%">Плюс</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:16%">Итог</th>`;
       h+=`</tr></thead><tbody>`;
       adminRows.forEach(r=>{
         h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td>`;
+        h+=`<td class="r">${html(money(r.extra))}</td>`;
         h+=`<td class="r">${html(money(r.boj))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"></td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setBonus" data-name="${html(r.name)}" value="${html(state.bonus[r.name]||"")}"></td>`;
-        h+=`<td class="r" style="font-weight:800">${html(money(r.net))}</td></tr>`;
+        h+=`<td class="r totalCell">${html(money(r.net))}</td></tr>`;
       });
       h+=`</tbody><tfoot><tr><td>Итого</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"gross")))}</td>`;
+      h+=`<td class="r">${html(money(sum(adminRows,"extra")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"boj")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"adv")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"bonus")))}</td>`;
-      h+=`<td class="r">${html(money(sum(adminRows,"net")))}</td></tr></tfoot></table></div></div>`;
+      h+=`<td class="r totalCell">${html(money(sum(adminRows,"net")))}</td></tr></tfoot></table></div></div>`;
 
       h+=`<div class="section"><div class="secTop"><div><div class="secT">Кальянные мастера</div><div class="secS">Инвентаризация: ${html(money(kmInv))} · по ${html(money(kmShare))}</div></div>`;
       h+=`<div style="width:min(280px,100%)">`;
-      h+=`<div class="muted" style="margin-bottom:6px">Доплата старшему (${html(SENIOR_KM_NAME)})</div>`;
-      h+=`<input class="inp miniIn" data-act="setSeniorKm" value="${html(state.seniorKm||"")}">`;
+      h+=`<div class="muted" style="margin-bottom:6px">Доплата старшему (${html(SENIOR_KM_NAME)}): ${html(money(seniorKmExtra))}</div>`;
       h+=`<div style="margin-top:10px"><input class="inp miniIn" placeholder="Табак" data-act="setInvK" value="${html(inv.km.tobacco)}"></div>`;
       h+=`</div></div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
-      h+=`<th style="width:28%">Сотр.</th><th class="r" style="width:16%">Нач.</th><th class="r" style="width:14%">Бой</th><th class="r" style="width:14%">Аванс</th><th class="r" style="width:14%">Премия</th><th class="r" style="width:14%">Итог</th>`;
+      h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:16%">Нач.</th><th class="r" style="width:10%">Плюс</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:14%">Итог</th>`;
       h+=`</tr></thead><tbody>`;
       kmRows.forEach(r=>{
         h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td>`;
+        h+=`<td class="r">${html(money(r.extra))}</td>`;
         h+=`<td class="r">${html(money(r.boj))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"></td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setBonus" data-name="${html(r.name)}" value="${html(state.bonus[r.name]||"")}"></td>`;
-        h+=`<td class="r" style="font-weight:800">${html(money(r.net))}</td></tr>`;
+        h+=`<td class="r totalCell">${html(money(r.net))}</td></tr>`;
       });
       h+=`</tbody><tfoot><tr><td>Итого</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"gross")))}</td>`;
+      h+=`<td class="r">${html(money(sum(kmRows,"extra")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"boj")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"adv")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"bonus")))}</td>`;
-      h+=`<td class="r">${html(money(sum(kmRows,"net")))}</td></tr></tfoot></table></div></div>`;
+      h+=`<td class="r totalCell">${html(money(sum(kmRows,"net")))}</td></tr></tfoot></table></div></div>`;
 
       h+=`</div></div></div>`;
       return h;
     })();
 
     const manager=(()=>{
-      const pct=n0(state.manager.percent);
-      const pay=mt.revenue*pct/100;
-      const senior=Math.max(0,m0(state.manager.seniorBonus));
-      let h=`<div class="card"><div class="card-h"><div><div class="t">Управляющая</div><div class="st">${MANAGER_NAME} · Итог: ${html(money(pay+senior))}</div></div></div><div class="card-b">`;
-      h+=`<div class="row2">`;
-      h+=`<div><div class="muted" style="margin-bottom:6px">Процент от выручки месяца (%)</div><input class="inp" data-act="setManager" data-key="percent" value="${html(state.manager.percent||"")}"></div>`;
-      h+=`<div><div class="muted" style="margin-bottom:6px">Доплата старшего администратора</div><input class="inp" data-act="setManager" data-key="seniorBonus" value="${html(state.manager.seniorBonus||"")}"></div>`;
-      h+=`</div>`;
-      h+=`<div class="section" style="margin-top:12px"><div class="muted">Расчёт</div><div style="margin-top:6px;font-size:18px;font-weight:900">${html(money(pay+senior))}</div><div class="muted" style="margin-top:6px">${html(money(pay))} + ${html(money(senior))}</div></div>`;
+      const pay=mt.revenue*MANAGER_PCT/100;
+      let h=`<div class="card"><div class="card-h"><div><div class="t">Управляющая</div><div class="st">${MANAGER_NAME} · Итог: ${html(money(pay))}</div></div></div><div class="card-b">`;
+      h+=`<div class="section"><div class="muted">Фиксированный процент</div><div style="margin-top:6px;font-size:18px;font-weight:900">${MANAGER_PCT}%</div><div class="muted" style="margin-top:6px">От общей выручки месяца</div></div>`;
+      h+=`<div class="section" style="margin-top:12px"><div class="muted">Расчёт</div><div style="margin-top:6px;font-size:18px;font-weight:900">${html(money(pay))}</div><div class="muted" style="margin-top:6px">${MANAGER_PCT}% × ${html(money(mt.revenue))}</div></div>`;
       h+=`</div></div>`;
       return h;
     })();
@@ -1275,6 +1318,7 @@
   const applyStaffUpdate=(nextStaff,keepFocus)=>{
     state.staff=normalizeStaff(nextStaff);
     syncRoleLists();
+    state.asgn=normalizeAssignsForMonth(state.asgn||{},state.year,state.month);
     state.adv=normalizeAdv(state.adv);
     state.bonus=normalizeBonus(state.bonus);
     state.adminSalary=normalizeAdminSalary(state.adminSalary);
