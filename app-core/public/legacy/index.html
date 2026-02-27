@@ -1210,14 +1210,15 @@
       await hydrateBySession(data&&data.session?data.session:null);
     });
   };
-  const applyStaffUpdate=nextStaff=>{
+  const applyStaffUpdate=(nextStaff,keepFocus)=>{
     state.staff=normalizeStaff(nextStaff);
     syncRoleLists();
     state.adv=normalizeAdv(state.adv);
     state.bonus=normalizeBonus(state.bonus);
     state.adminSalary=normalizeAdminSalary(state.adminSalary);
     scheduleSave();
-    render();
+    if(keepFocus) renderKeepFocus();
+    else render();
   };
 
   const tryInitCloud=()=>{
@@ -1481,6 +1482,16 @@
       applyStaffUpdate(next);
       return;
     }
+    if(t.matches("input[data-act='setStaffName']")){
+      const idx=Number(t.getAttribute("data-idx"));
+      if(idx<0 || idx>=state.staff.length) return;
+      const raw=t.value;
+      const f=formatStaffName(raw);
+      const next=state.staff.slice();
+      next[idx]={...next[idx],name:f.display||raw.trim(),fullName:f.full||raw.trim()};
+      applyStaffUpdate(next,true);
+      return;
+    }
   });
 
   el.addEventListener("input",(e)=>{
@@ -1502,11 +1513,9 @@
     if(t.matches("input[data-act='setStaffName']")){
       const idx=Number(t.getAttribute("data-idx"));
       if(idx<0 || idx>=state.staff.length) return;
-      const raw=t.value;
-      const f=formatStaffName(raw);
       const next=state.staff.slice();
-      next[idx]={...next[idx],name:f.display||raw.trim(),fullName:f.full||raw.trim()};
-      applyStaffUpdate(next);
+      next[idx]={...next[idx],name:t.value,fullName:t.value};
+      state.staff=next;
       return;
     }
 
