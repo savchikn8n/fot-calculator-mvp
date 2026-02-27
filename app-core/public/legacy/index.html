@@ -93,6 +93,7 @@
   .cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;font-size:11px;color:var(--text-muted)}
   .cal-grid{margin-top:8px;display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
   .cell{height:80px;border-radius:18px;border:1px solid var(--border);background:var(--cell-bg);overflow:hidden}
+  .cell.today{box-shadow:inset 0 0 0 2px #facc15}
   .day{height:100%;border-radius:inherit;padding:10px 12px;cursor:pointer;user-select:none;transition:background .15s}
   .day:hover{background:var(--cell-hover)}
   .cell.red{background:rgba(244,63,94,.15);border-color:rgba(244,63,94,.25)}
@@ -844,6 +845,8 @@
       const fd=new Date(state.year,state.month,1);
       const start=monIdx(fd.getDay());
       const total=Math.ceil((start+days)/7)*7;
+      const now=new Date();
+      const isCurrentMonth=now.getFullYear()===state.year && now.getMonth()===state.month;
       let h=`<div class="card"><div class="card-h"><div><div class="t">Календарь</div><div class="st">Клик по дню — открыть редактор</div></div><button class="btn ghost" data-act="clearMonth" ${state.readOnly?"disabled":""}>Очистить месяц</button></div><div class="card-b">`;
       h+=`<div class="cal-head">${WEEKDAYS.map(w=>`<div>${w}</div>`).join("")}</div>`;
       h+=`<div class="cal-grid">`;
@@ -856,7 +859,8 @@
         const admins=uniqNames(a.admin).join(", ")||"—";
         const kms=uniqNames([...(a.km_main||[]),...(a.km_support||[]),...(a.km_support2||[])]).join(", ")||"—";
         const cls=tierClass(rev);
-        h+=`<div class="cell ${cls}"><div class="day" data-act="openDay" data-day="${d}">`;
+        const todayCls=isCurrentMonth && now.getDate()===d?" today":"";
+        h+=`<div class="cell ${cls}${todayCls}"><div class="day" data-act="openDay" data-day="${d}">`;
         h+=`<div class="daytop"><div class="dnum">${d}</div><div class="drev">${rev?html(money(rev)):""}</div></div>`;
         h+=`<div class="small"><div>А: ${html(admins)}</div><div>КМ: ${html(kms)}</div></div>`;
         h+=`</div></div>`;
