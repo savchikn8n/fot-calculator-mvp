@@ -1761,10 +1761,16 @@
       const day=state.asgn[d];
       const arr=(day[role]||[]).slice();
       if(field==="hours"){
-        const dt=new Date(state.year,state.month,d);
-        const total=defHours(role,dt);
-        const nextRows=rebalanceRoleHours(arr,total,idx,t.value);
-        setAssignDay(d,{...day,[role]:nextRows});
+        if(role==="km_support2"){
+          const row={...arr[idx],[field]:t.value};
+          arr[idx]=row;
+          setAssignDay(d,{...day,[role]:arr});
+        }else{
+          const dt=new Date(state.year,state.month,d);
+          const total=defHours(role,dt);
+          const nextRows=rebalanceRoleHours(arr,total,idx,t.value);
+          setAssignDay(d,{...day,[role]:nextRows});
+        }
       }else{
         const row={...arr[idx],[field]:t.value};
         arr[idx]=row;
