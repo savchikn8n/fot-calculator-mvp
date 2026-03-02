@@ -5,6 +5,7 @@ This repository includes an automated workflow:
 - File: `.github/workflows/supabase-backup.yml`
 - Runs: every day (UTC) + manual run from GitHub Actions
 - Output: `.dump` and `.sql.gz` backup artifacts in GitHub Actions
+- Optional mirror: pushes backup files to a private GitHub repository
 
 ## One-time setup
 
@@ -14,6 +15,17 @@ This repository includes an automated workflow:
 4. Value: your Supabase Postgres connection string from:
    - Supabase -> `Project Settings` -> `Database` -> `Connection string` (URI).
 5. Save.
+
+### Optional second copy in private GitHub repo (recommended)
+
+1. Create a private repository for backups, for example: `your-user/fot-backups`.
+2. Create a Personal Access Token (classic) with `repo` scope.
+3. In your main app repository -> `Settings` -> `Secrets and variables` -> `Actions`, add:
+   - `BACKUP_REPO`: `your-user/fot-backups`
+   - `BACKUP_REPO_TOKEN`: your PAT token
+   - `BACKUP_REPO_BRANCH`: `main` (optional, default is `main`)
+4. On each backup run, files will also be committed into:
+   - `supabase/<owner>/<repo>/` inside the backup repository.
 
 ## Run backup manually
 
@@ -44,4 +56,3 @@ Restore from sql.gz:
 ```bash
 gunzip -c supabase-YYYY-MM-DDTHH-MM-SSZ.sql.gz | psql "<TARGET_DB_URL>"
 ```
-

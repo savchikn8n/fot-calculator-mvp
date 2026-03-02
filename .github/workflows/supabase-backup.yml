@@ -13,6 +13,9 @@ jobs:
       contents: read
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_REPO: ${{ secrets.BACKUP_REPO }}
+      BACKUP_REPO_TOKEN: ${{ secrets.BACKUP_REPO_TOKEN }}
+      BACKUP_REPO_BRANCH: ${{ secrets.BACKUP_REPO_BRANCH }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,3 +67,32 @@ jobs:
           path: backups/*
           if-no-files-found: error
           retention-days: 30
+
+      - name: Mirror backup to private repository
+        if: ${{ env.BACKUP_REPO != '' && env.BACKUP_REPO_TOKEN != '' }}
+        run: |
+          set -euo pipefail
+          REPO_BRANCH="${BACKUP_REPO_BRANCH:-main}"
+          TARGET_DIR="$(mktemp -d)"
+          git clone --depth=1 --branch "${REPO_BRANCH}" "https://x-access-token:${BACKUP_REPO_TOKEN}@github.com/${BACKUP_REPO}.git" "${TARGET_DIR}"
+
+          mkdir -p "${TARGET_DIR}/supabase/${GITHUB_REPOSITORY}"
+          cp backups/* "${TARGET_DIR}/supabase/${GITHUB_REPOSITORY}/"
+
+          cd "${TARGET_DIR}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git add supabase/"${GITHUB_REPOSITORY}"/*
+          if git diff --staged --quiet; then
+            echo "No staged changes"
+            exit 0
+          fi
+
+          git commit -m "backup: ${GITHUB_REPOSITORY} run ${GITHUB_RUN_ID}"
+          git push origin "${REPO_BRANCH}"
