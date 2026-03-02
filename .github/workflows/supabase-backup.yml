@@ -40,14 +40,16 @@ jobs:
           set -euo pipefail
           TS="$(date -u +%Y-%m-%dT%H-%M-%SZ)"
           mkdir -p backups
+          PG_DUMP_BIN="/usr/lib/postgresql/17/bin/pg_dump"
+          "${PG_DUMP_BIN}" --version
 
-          pg_dump "${SUPABASE_DB_URL}" \
+          "${PG_DUMP_BIN}" "${SUPABASE_DB_URL}" \
             --format=custom \
             --no-owner \
             --no-privileges \
             --file="backups/supabase-${TS}.dump"
 
-          pg_dump "${SUPABASE_DB_URL}" \
+          "${PG_DUMP_BIN}" "${SUPABASE_DB_URL}" \
             --format=plain \
             --no-owner \
             --no-privileges \
