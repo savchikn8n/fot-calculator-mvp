@@ -65,6 +65,7 @@
     --total-text:var(--text-strong);
   }
   #fot-app *{box-sizing:border-box}
+  #fot-app{overflow-x:hidden}
   .bg{min-height:100vh;background:var(--bg);color:var(--text)}
   .wrap{max-width:1500px;margin:0 auto;padding:24px}
   .grid{display:grid;gap:16px}
@@ -162,8 +163,9 @@
   @media (max-width:900px){
     html,body,#fot-app,.bg{overflow-x:hidden}
     .bg{padding-top:env(safe-area-inset-top);padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px))}
-    .wrap{width:95vw;max-width:95vw;padding:8px 0 48px;margin:0 auto}
+    .wrap{width:95%;max-width:95%;padding:8px 0 48px;margin:0 auto}
     .grid,.min,.card,.card-h,.card-b,.section,.tableWrap,.role,.dialog{min-width:0}
+    .grid,.min{max-width:100%}
     .grid{gap:10px}
     .card{border-radius:18px}
     .card-h{padding:14px 14px 8px;flex-direction:column;align-items:stretch;gap:10px}
@@ -215,7 +217,7 @@
     .pSub{font-size:12px}
     .sel,.inp,.ta{font-size:16px}
     .rowName .sel{padding-right:28px}
-    .rowName .sel,.rowCtl .del,.rowHours .inp,.rowBreak .inp,.rowTip .inp{width:100%}
+    .rowName .sel,.rowCtl .del,.rowHours .inp,.rowBreak .inp,.rowTip .inp{width:100%;max-width:100%}
 
     .cnt{width:38px;height:38px;font-size:13px}
     .cntRow,.cntHdr{grid-template-columns:repeat(3,38px);gap:8px}
@@ -1024,6 +1026,24 @@
   };
 
   const html=(s)=>String(s).replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
+  const NUMERIC_INPUT_ACTS=new Set([
+    "setDayRevenue","setDayUnpaid","setDayTips","setRate","setInvA","setInvK",
+    "setAdvance","setBonus","setAdminSalary","setSeniorKm","setManager","setRow"
+  ]);
+  const applyNumericInputHints=root=>{
+    root.querySelectorAll("input[data-act]").forEach(inp=>{
+      const act=inp.getAttribute("data-act")||"";
+      if(!NUMERIC_INPUT_ACTS.has(act)) return;
+      if(act==="setRow"){
+        const field=inp.getAttribute("data-field")||"";
+        if(field!=="hours" && field!=="breakage") return;
+      }
+      inp.setAttribute("inputmode","decimal");
+      inp.setAttribute("autocomplete","off");
+      inp.setAttribute("autocorrect","off");
+      inp.setAttribute("spellcheck","false");
+    });
+  };
 
   function render(){
     const pageBg=state.theme==="light"?"#f5f7fb":"#09090b";
@@ -1422,6 +1442,7 @@
     })();
 
     el.innerHTML=`<div class="theme-${state.theme}"><div class="bg"><div class="wrap"><div class="grid"><div>${sidebar}</div><div class="min">${main}</div></div></div>${modal}${clearModal}${clearDayModal}${removeStaffModal}</div></div>`;
+    applyNumericInputHints(el);
     if(state.readOnly){
       const selectors=[
         "button[data-act='clearMonth']",
