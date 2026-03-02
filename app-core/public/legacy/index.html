@@ -457,6 +457,8 @@
     scheduleText:"",
     scheduleStatus:"",
     scheduleError:"",
+    monthIoStatus:"",
+    monthIoError:"",
     staff:normalizeStaff(STAFF_DEFAULT),
     confirmRemoveStaffIdx:null,
     confirmClearDay:false,
@@ -810,7 +812,60 @@
     const d=new Date(state.year,state.month+delta,1);
     state.year=d.getFullYear();
     state.month=d.getMonth();
+    state.monthIoStatus="";
+    state.monthIoError="";
     loadMonth(key());
+  };
+
+  const exportCurrentMonth=()=>{
+    const k=key();
+    const snapshot=toStoreSnapshot();
+    const payload={
+      type:"fot-month",
+      version:1,
+      month:k,
+      exportedAt:new Date().toISOString(),
+      data:normalizeMonthData((snapshot.months||{})[k]||{})
+    };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=`fot-month-${k}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    state.monthIoError="";
+    state.monthIoStatus=`Экспортирован месяц ${k}`;
+    render();
+  };
+
+  const importCurrentMonthFromFile=file=>{
+    if(!file) return;
+    const k=key();
+    file.text().then(raw=>{
+      let parsed=null;
+      try{
+        parsed=JSON.parse(raw);
+      }catch(e){
+        throw new Error("Файл не похож на JSON");
+      }
+      const source=parsed&&typeof parsed==="object"&&parsed.data&&typeof parsed.data==="object"?parsed.data:parsed;
+      const nextStore={...cloud.store,months:{...(cloud.store&&cloud.store.months||{})}};
+      nextStore.months[k]=normalizeMonthData(source);
+      if(!nextStore.staff) nextStore.staff=normalizeStaff(state.staff);
+      cloud.store=nextStore;
+      if(cloud.enabled) cloudSave(nextStore);
+      else safeSet(nextStore);
+      state.monthIoError="";
+      state.monthIoStatus=`Импортирован в месяц ${k}`;
+      loadMonth(k);
+    }).catch(err=>{
+      state.monthIoStatus="";
+      state.monthIoError=err&&err.message?err.message:"Ошибка импорта";
+      render();
+    });
   };
 
   const tierClass=rev=>rev>0?(rev>=70000?"grn":rev>=50000?"yel":"red"):"";
@@ -1152,6 +1207,13 @@
       h+=`<select class="sel" data-act="setYear">${yopts.map(y=>`<option value="${y}" ${y===state.year?"selected":""}>${y}</option>`).join("")}</select>`;
       h+=`<select class="sel" data-act="setMonth">${MONTHS.map((m,i)=>`<option value="${i}" ${i===state.month?"selected":""}>${html(m)}</option>`).join("")}</select>`;
       h+=`</div>`;
+      h+=`<div class="row2" style="margin-top:10px">`;
+      h+=`<button class="btn ghost" data-act="exportMonth">Экспорт</button>`;
+      h+=`<button class="btn ghost" data-act="importMonth" ${state.readOnly?"disabled":""}>Импорт</button>`;
+      h+=`</div>`;
+      h+=`<input type="file" accept="application/json,.json" data-act="importMonthFile" style="display:none">`;
+      if(state.monthIoStatus) h+=`<div class="hint" style="color:#16a34a">${html(state.monthIoStatus)}</div>`;
+      if(state.monthIoError) h+=`<div class="hint" style="color:#ef4444">${html(state.monthIoError)}</div>`;
       h+=`<div class="tabs">`;
       h+=`<div class="pill ${state.view==="dashboard"?"on":"off"}" data-act="setView" data-view="dashboard">Дашборд</div>`;
       h+=`<div class="pill ${state.view==="settings"?"on":"off"}" data-act="setView" data-view="settings">Настройки</div>`;
@@ -1283,6 +1345,7 @@
     if(state.readOnly){
       const selectors=[
         "button[data-act='clearMonth']",
+        "button[data-act='importMonth']",
         "button[data-act='applySchedule']",
         "button[data-act='addStaff']",
         "button[data-act='removeStaff']",
@@ -1300,6 +1363,7 @@
         "input[data-act='setManager']",
         "input[data-act='setRow']",
         "input[data-act='setStaffName']",
+        "input[data-act='importMonthFile']",
         "select[data-act='setRow']",
         "select[data-act='setStaffRole']",
         "textarea[data-act='setDayComment']",
@@ -1525,7 +1589,7 @@
       return;
     }
 
-    if(state.readOnly && ["clearMonth","undoClear","addRow","delRow","confirmClear","applySchedule","clearScheduleText","addStaff","removeStaff","confirmRemoveStaff","clearDay","confirmClearDay"].includes(act)) return;
+    if(state.readOnly && ["clearMonth","undoClear","addRow","delRow","confirmClear","applySchedule","clearScheduleText","importMonth","addStaff","removeStaff","confirmRemoveStaff","clearDay","confirmClearDay"].includes(act)) return;
 
     if(act==="setView"){
       const nextView=t.getAttribute("data-view");
@@ -1659,6 +1723,15 @@
       applyScheduleImport();
       return;
     }
+    if(act==="exportMonth"){
+      exportCurrentMonth();
+      return;
+    }
+    if(act==="importMonth"){
+      const inp=el.querySelector("input[data-act='importMonthFile']");
+      if(inp && inp.click) inp.click();
+      return;
+    }
     if(act==="clearScheduleText"){
       state.scheduleText="";
       state.scheduleStatus="";
@@ -1759,12 +1832,27 @@
 
     if(t.matches("select[data-act='setYear']")){
       state.year=Number(t.value);
+      state.monthIoStatus="";
+      state.monthIoError="";
       loadMonth(key());
       return;
     }
     if(t.matches("select[data-act='setMonth']")){
       state.month=Number(t.value);
+      state.monthIoStatus="";
+      state.monthIoError="";
       loadMonth(key());
+      return;
+    }
+    if(t.matches("input[data-act='importMonthFile']")){
+      if(state.readOnly) return;
+      const inp=t;
+      const file=inp.files&&inp.files[0]?inp.files[0]:null;
+      inp.value="";
+      if(!file) return;
+      const ok=window.confirm(`Импорт перезапишет данные открытого месяца (${key()}). Продолжить?`);
+      if(!ok) return;
+      importCurrentMonthFromFile(file);
       return;
     }
     if(t.matches("select[data-act='setRow']")){
