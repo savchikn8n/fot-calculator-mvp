@@ -159,8 +159,8 @@
   .mobFold > summary::-webkit-details-marker{display:none}
   .mobFold > summary .muted{padding-top:2px}
   @media (max-width:900px){
-    .bg{overflow-x:hidden;padding-top:env(safe-area-inset-top);padding-bottom:max(14px,env(safe-area-inset-bottom))}
-    .wrap{width:98vw;max-width:98vw;padding:8px 0;margin:0 auto}
+    .bg{overflow-x:hidden;padding-top:env(safe-area-inset-top);padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px))}
+    .wrap{width:95vw;max-width:95vw;padding:8px 0 48px;margin:0 auto}
     .grid,.min,.card,.card-h,.card-b,.section,.tableWrap,.role,.dialog{min-width:0}
     .grid{gap:10px}
     .card{border-radius:18px}
@@ -1045,9 +1045,9 @@
     const mt=calcMonthTotals();
     const pt=calcPeopleTotals();
     const sc=calcShiftCounts();
-    const mobileReadOnly=state.readOnly && isMobileView();
+    const mobileFold=isMobileView();
     const foldCard=(title,subtitle,body,open)=>{
-      if(!mobileReadOnly){
+      if(!mobileFold){
         return `<div class="card"><div class="card-h"><div><div class="t">${html(title)}</div><div class="st">${html(subtitle)}</div></div></div><div class="card-b">${body}</div></div>`;
       }
       return `<details class="card mobFold" ${open?"open":""}><summary><div><div class="t">${html(title)}</div><div class="st">${html(subtitle)}</div></div><div class="muted">Развернуть</div></summary><div class="card-b">${body}</div></details>`;
@@ -1304,7 +1304,7 @@
         shiftsBody+=`<div class="kmShiftLine"><div>${html(n)}</div><div class="cntRow"><div class="cnt">${c.km_main||0}</div><div class="cnt">${c.km_support||0}</div><div class="cnt">${c.km_support2||0}</div></div></div>`;
       });
       shiftsBody+=`</div>`;
-      if(mobileReadOnly){
+      if(mobileFold){
         h+=`<details class="card mobFold" style="margin-top:12px"><summary><div><div class="t">Количество смен</div><div class="st">Учитываются только дни с заполненной выручкой</div></div><div class="muted">Развернуть</div></summary><div class="card-b">${shiftsBody}</div></details>`;
       }else{
         h+=`<div class="card" style="margin-top:12px"><div class="card-h"><div><div class="t">Количество смен</div><div class="st">Учитываются только дни с заполненной выручкой</div></div></div><div class="card-b">${shiftsBody}</div></div>`;
