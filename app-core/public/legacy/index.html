@@ -1878,6 +1878,7 @@
       return;
     }
     if(t.matches("input[data-act='setDayRevenue']")){
+      if(!isMobileView()) return;
       const d=state.activeDay; if(!d) return;
       state.rev={...state.rev,[d]:t.value};
       scheduleSave();
@@ -1885,6 +1886,7 @@
       return;
     }
     if(t.matches("input[data-act='setDayUnpaid']")){
+      if(!isMobileView()) return;
       const d=state.activeDay; if(!d) return;
       state.unpaid={...state.unpaid,[d]:t.value};
       scheduleSave();
@@ -1948,16 +1950,16 @@
     if(t.matches("input[data-act='setDayRevenue']")){
       const d=state.activeDay; if(!d) return;
       state.rev={...state.rev,[d]:t.value};
-      scheduleSave();
       if(isMobileView()) return;
+      scheduleSave();
       renderKeepFocus();
       return;
     }
     if(t.matches("input[data-act='setDayUnpaid']")){
       const d=state.activeDay; if(!d) return;
       state.unpaid={...state.unpaid,[d]:t.value};
-      scheduleSave();
       if(isMobileView()) return;
+      scheduleSave();
       renderKeepFocus();
       return;
     }
