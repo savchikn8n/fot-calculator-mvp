@@ -1529,6 +1529,13 @@
     window.scrollTo(sx,sy);
   }
 
+  const closeDayModal=()=>{
+    const ae=document.activeElement;
+    if(ae && typeof ae.blur==="function") ae.blur();
+    state.activeDay=null;
+    render();
+  };
+
   function setAssignDay(day,next){
     state.asgn={...state.asgn,[day]:next};
     scheduleSave();
@@ -1673,8 +1680,7 @@
     if(state.activeDay!=null){
       const trg=e.target;
       if(trg instanceof Element && trg.closest("#fot-modal") && !trg.closest(".dialog")){
-        state.activeDay=null;
-        render();
+        closeDayModal();
         return;
       }
     }
@@ -1890,8 +1896,7 @@
       return;
     }
     if(act==="closeModal"){
-      state.activeDay=null;
-      render();
+      closeDayModal();
       return;
     }
     if(act==="prevMonth"){ shiftMonth(-1); return; }
@@ -2189,6 +2194,7 @@
       const d=state.activeDay; if(!d) return;
       state.dayComment={...state.dayComment,[d]:t.value};
       scheduleSave();
+      if(isMobileView()) return;
       renderKeepFocus();
       return;
     }
@@ -2204,8 +2210,7 @@
       }
     }
     if(e.key==="Escape" && state.activeDay!=null){
-      state.activeDay=null;
-      render();
+      closeDayModal();
     }
   });
 
