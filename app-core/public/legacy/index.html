@@ -920,8 +920,8 @@
 
   const calcPeopleTotals=()=>{
     const adminTotals={}; const kmTotals={};
-    ADMINS.forEach(n=>adminTotals[n]={gross:0,breakage:0});
-    KMS.forEach(n=>kmTotals[n]={gross:0,breakage:0});
+    ADMINS.forEach(n=>adminTotals[n]={gross:0,breakage:0,tips:0});
+    KMS.forEach(n=>kmTotals[n]={gross:0,breakage:0,tips:0});
 
     const add=(roleTotal,roleRows,target)=>{
       const rr=Array.isArray(roleRows)?roleRows:[];
@@ -929,10 +929,28 @@
       for(let i=0;i<rr.length;i++){
         const name=String((rr[i]&&rr[i].name)||"").trim();
         if(!name) continue;
-        if(!target[name]) target[name]={gross:0,breakage:0};
+        if(!target[name]) target[name]={gross:0,breakage:0,tips:0};
         target[name].gross+=(payouts[i]||0);
         target[name].breakage+=Math.max(0,m0(rr[i]&&rr[i].breakage));
       }
+    };
+    const addTips=(day, dayAssign, target)=>{
+      const t=n0(state.tips[day]);
+      if(t<=0) return;
+      const names=new Set();
+      ["admin","km_main","km_support","km_support2"].forEach(role=>{
+        (dayAssign[role]||[]).forEach(r=>{
+          const nm=String((r&&r.name)||"").trim();
+          if(nm) names.add(nm);
+        });
+      });
+      const list=[...names];
+      if(list.length===0) return;
+      const share=t/list.length;
+      list.forEach(name=>{
+        if(!target[name]) return;
+        target[name].tips+=share;
+      });
     };
 
     const days=dim();
@@ -945,6 +963,8 @@
       add(totals.km_main,a.km_main,kmTotals);
       add(totals.km_support,a.km_support,kmTotals);
       add(totals.km_support2,a.km_support2,kmTotals);
+      addTips(d,a,adminTotals);
+      addTips(d,a,kmTotals);
     }
     return{adminTotals,kmTotals};
   };
@@ -1107,21 +1127,23 @@
       const adminRows=ADMINS.map(name=>{
         const gross=(pt.adminTotals[name]||{}).gross||0;
         const boj=(pt.adminTotals[name]||{}).breakage||0;
+        const tips=(pt.adminTotals[name]||{}).tips||0;
         const adv=Math.max(0,m0(state.adv[name]));
         const bonus=Math.max(0,m0(state.bonus[name]));
         const extra=name===seniorAdminName?seniorAdminExtra:0;
         const net=gross - boj - adv + bonus - adminShare + extra;
-        return{ name,gross,boj,adv,bonus,extra,net };
+        return{ name,gross,boj,adv,bonus,tips,extra,net };
       });
 
       const kmRows=KMS.map(name=>{
         const gross=(pt.kmTotals[name]||{}).gross||0;
         const boj=(pt.kmTotals[name]||{}).breakage||0;
+        const tips=(pt.kmTotals[name]||{}).tips||0;
         const adv=Math.max(0,m0(state.adv[name]));
         const bonus=Math.max(0,m0(state.bonus[name]));
         const extra=name===seniorKmName?seniorKmExtra:0;
         const net=gross - boj - adv + bonus - kmShare + extra;
-        return{ name,gross,boj,adv,bonus,extra,net };
+        return{ name,gross,boj,adv,bonus,tips,extra,net };
       });
 
       const sum=(arr,k)=>arr.reduce((a,r)=>a+(r[k]||0),0);
@@ -1140,7 +1162,7 @@
       h+=`</div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
-      h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:14%">Нач.</th><th class="r" style="width:10%">Плюс</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:16%">Итог</th>`;
+      h+=`<th style="width:21%">Сотр.</th><th class="r" style="width:12%">Нач.</th><th class="r" style="width:9%">Плюс</th><th class="r" style="width:10%">Бой</th><th class="r" style="width:10%">Аванс</th><th class="r" style="width:10%">Премия</th><th class="r" style="width:10%">Итог</th><th class="r" style="width:18%">Чаевые</th>`;
       h+=`</tr></thead><tbody>`;
       adminRows.forEach(r=>{
         h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td>`;
@@ -1148,7 +1170,8 @@
         h+=`<td class="r">${html(money(r.boj))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"></td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setBonus" data-name="${html(r.name)}" value="${html(state.bonus[r.name]||"")}"></td>`;
-        h+=`<td class="r totalCell">${html(money(r.net))}</td></tr>`;
+        h+=`<td class="r totalCell">${html(money(r.net))}</td>`;
+        h+=`<td class="r">${html(money(r.tips))}</td></tr>`;
       });
       h+=`</tbody><tfoot><tr><td>Итого</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"gross")))}</td>`;
@@ -1156,7 +1179,8 @@
       h+=`<td class="r">${html(money(sum(adminRows,"boj")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"adv")))}</td>`;
       h+=`<td class="r">${html(money(sum(adminRows,"bonus")))}</td>`;
-      h+=`<td class="r totalCell">${html(money(sum(adminRows,"net")))}</td></tr></tfoot></table></div></div>`;
+      h+=`<td class="r totalCell">${html(money(sum(adminRows,"net")))}</td>`;
+      h+=`<td class="r">${html(money(sum(adminRows,"tips")))}</td></tr></tfoot></table></div></div>`;
 
       h+=`<div class="section"><div class="secTop"><div><div class="secT">Кальянные мастера</div><div class="secS">Инвентаризация: ${html(money(kmInv))} · по ${html(money(kmShare))}</div></div>`;
       h+=`<div style="width:min(280px,100%)">`;
@@ -1165,7 +1189,7 @@
       h+=`</div></div>`;
 
       h+=`<div class="tableWrap"><table><thead><tr>`;
-      h+=`<th style="width:24%">Сотр.</th><th class="r" style="width:16%">Нач.</th><th class="r" style="width:10%">Плюс</th><th class="r" style="width:12%">Бой</th><th class="r" style="width:12%">Аванс</th><th class="r" style="width:12%">Премия</th><th class="r" style="width:14%">Итог</th>`;
+      h+=`<th style="width:21%">Сотр.</th><th class="r" style="width:14%">Нач.</th><th class="r" style="width:9%">Плюс</th><th class="r" style="width:10%">Бой</th><th class="r" style="width:10%">Аванс</th><th class="r" style="width:10%">Премия</th><th class="r" style="width:10%">Итог</th><th class="r" style="width:16%">Чаевые</th>`;
       h+=`</tr></thead><tbody>`;
       kmRows.forEach(r=>{
         h+=`<tr><td class="tr">${html(r.name)}</td><td class="r">${html(money(r.gross))}</td>`;
@@ -1173,7 +1197,8 @@
         h+=`<td class="r">${html(money(r.boj))}</td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setAdvance" data-name="${html(r.name)}" value="${html(state.adv[r.name]||"")}"></td>`;
         h+=`<td class="r"><input class="inp miniIn" data-act="setBonus" data-name="${html(r.name)}" value="${html(state.bonus[r.name]||"")}"></td>`;
-        h+=`<td class="r totalCell">${html(money(r.net))}</td></tr>`;
+        h+=`<td class="r totalCell">${html(money(r.net))}</td>`;
+        h+=`<td class="r">${html(money(r.tips))}</td></tr>`;
       });
       h+=`</tbody><tfoot><tr><td>Итого</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"gross")))}</td>`;
@@ -1181,7 +1206,8 @@
       h+=`<td class="r">${html(money(sum(kmRows,"boj")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"adv")))}</td>`;
       h+=`<td class="r">${html(money(sum(kmRows,"bonus")))}</td>`;
-      h+=`<td class="r totalCell">${html(money(sum(kmRows,"net")))}</td></tr></tfoot></table></div></div>`;
+      h+=`<td class="r totalCell">${html(money(sum(kmRows,"net")))}</td>`;
+      h+=`<td class="r">${html(money(sum(kmRows,"tips")))}</td></tr></tfoot></table></div></div>`;
 
       h+=`</div></div></div>`;
       return h;
