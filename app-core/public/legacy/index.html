@@ -557,7 +557,7 @@
         admin:normalizeAssignRows(day.admin,ADMINS,"admin",dt),
         km_main:normalizeAssignRows(day.km_main,KMS,"km_main",dt),
         km_support:normalizeAssignRows(day.km_support,KMS,"km_support",dt),
-        km_support2:isFriSat(dt)?normalizeAssignRows(day.km_support2,KMS,"km_support2",dt):[],
+        km_support2:normalizeAssignRows(day.km_support2,KMS,"km_support2",dt),
       };
     });
     return out;
@@ -1167,6 +1167,7 @@
       h+=`<div class="row">`;
       h+=`<textarea class="ta" data-act="setScheduleText" placeholder="23.2.2026\nПн\nЛеня/Рудик/Крис">${html(state.scheduleText||"")}</textarea>`;
       h+=`<button class="btn primary" data-act="applySchedule" ${state.readOnly?"disabled":""}>Применить в календарь</button>`;
+      h+=`<button class="btn ghost" data-act="clearScheduleText" ${state.readOnly?"disabled":""}>Очистить</button>`;
       if(state.scheduleStatus) h+=`<div class="hint" style="color:#16a34a">${html(state.scheduleStatus)}</div>`;
       if(state.scheduleError) h+=`<div class="hint" style="color:#ef4444">${html(state.scheduleError)}</div>`;
       h+=`</div></div></div>`;
@@ -1427,6 +1428,7 @@
       }
       const names=(lines[2]||"").split("/").map(x=>x.trim()).filter(Boolean);
       const fs=isFriSat(dt);
+      const hasExtraSupport=!fs && names.length>=4;
       const need=fs?4:3;
       if(names.length<need){
         errs.push(`Блок ${idx+1}: нужно ${need} имени(имён), получено ${names.length}`);
@@ -1434,9 +1436,9 @@
       }
       const kmMain=normalizePerson(names[0],KMS);
       const kmSupport=normalizePerson(names[1],KMS);
-      const admin=normalizePerson(names[fs?3:2],ADMINS);
-      const kmSupport2=fs?normalizePerson(names[2],KMS):null;
-      if(!kmMain || !kmSupport || !admin || (fs && !kmSupport2)){
+      const admin=normalizePerson(names[fs||hasExtraSupport?3:2],ADMINS);
+      const kmSupport2=(fs||hasExtraSupport)?normalizePerson(names[2],KMS):null;
+      if(!kmMain || !kmSupport || !admin || ((fs||hasExtraSupport) && !kmSupport2)){
         errs.push(`Блок ${idx+1}: не удалось распознать имена`);
         return;
       }
@@ -1446,7 +1448,7 @@
           admin:[{name:admin,hours:String(defHours("admin",dt)),breakage:""}],
           km_main:[{name:kmMain,hours:String(defHours("km_main",dt)),breakage:""}],
           km_support:[{name:kmSupport,hours:String(defHours("km_support",dt)),breakage:""}],
-          km_support2:fs?[{name:kmSupport2,hours:String(defHours("km_support2",dt)),breakage:""}]:[],
+          km_support2:(fs||hasExtraSupport)?[{name:kmSupport2,hours:String(defHours("km_support2",dt)),breakage:""}]:[],
         }
       });
     });
@@ -1523,7 +1525,7 @@
       return;
     }
 
-    if(state.readOnly && ["clearMonth","undoClear","addRow","delRow","confirmClear","applySchedule","addStaff","removeStaff","confirmRemoveStaff","clearDay","confirmClearDay"].includes(act)) return;
+    if(state.readOnly && ["clearMonth","undoClear","addRow","delRow","confirmClear","applySchedule","clearScheduleText","addStaff","removeStaff","confirmRemoveStaff","clearDay","confirmClearDay"].includes(act)) return;
 
     if(act==="setView"){
       const nextView=t.getAttribute("data-view");
@@ -1620,7 +1622,7 @@
         admin:keepOne(day.admin,"admin"),
         km_main:keepOne(day.km_main,"km_main"),
         km_support:keepOne(day.km_support,"km_support"),
-        km_support2:isFriSat(dt)?keepOne(day.km_support2,"km_support2"):[],
+        km_support2:(Array.isArray(day.km_support2)&&day.km_support2.length)?keepOne(day.km_support2,"km_support2"):[],
       };
       const nextAsgn={...state.asgn,[d]:nextDay};
       const nextComment={...state.dayComment}; delete nextComment[d];
@@ -1655,6 +1657,13 @@
     }
     if(act==="applySchedule"){
       applyScheduleImport();
+      return;
+    }
+    if(act==="clearScheduleText"){
+      state.scheduleText="";
+      state.scheduleStatus="";
+      state.scheduleError="";
+      render();
       return;
     }
     if(act==="addStaff"){
