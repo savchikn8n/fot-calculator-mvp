@@ -87,6 +87,7 @@
   .btn.ghost{background:var(--surface-2);color:var(--text-soft)}
   .btn.contrast{background:transparent;color:#ef4444;border-color:#ef4444}
   .sel,.inp{width:100%;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text-strong);padding:10px 12px;font-size:13px;outline:none}
+  .sel,.inp,.btn,.pill{max-width:100%}
   .inp{text-align:right}
   .ta{width:100%;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text-strong);padding:10px 12px;font-size:13px;outline:none;resize:vertical;min-height:88px;line-height:1.35}
   .ta:focus{box-shadow:0 0 0 2px var(--focus-ring)}
@@ -161,14 +162,17 @@
   .mobFold > summary::-webkit-details-marker{display:none}
   .mobFold > summary .muted{padding-top:2px}
   @media (max-width:900px){
-    html,body,#fot-app,.bg{overflow-x:hidden}
+    html,body,#fot-app,.bg{width:100%;max-width:100%;overflow-x:clip}
     .bg{width:100%;max-width:100%;padding-top:env(safe-area-inset-top);padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px))}
-    .wrap{width:100%;max-width:100%;padding:8px 2.5% 72px;margin:0 auto}
+    .wrap{width:min(95vw,100%);max-width:min(95vw,100%);padding:8px 0 72px;margin:0 auto}
+    .wrap > *{width:100%;max-width:100%}
     .grid,.min,.card,.card-h,.card-b,.section,.tableWrap,.role,.dialog{min-width:0}
     .grid,.min,.card{width:100%;max-width:100%}
     .grid{gap:10px}
-    .row2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+    .row,.row2,.tabs{max-width:100%}
+    .row2{grid-template-columns:minmax(0,1fr)}
     .row2 > *, .tabs > *, .card-h > *{min-width:0}
+    .sel,.inp,.btn,.pill,.ta{min-width:0;max-width:100%}
     .card{border-radius:16px;box-shadow:none}
     .card-h{padding:14px 14px 8px;flex-direction:column;align-items:stretch;gap:10px}
     .card-b{padding:0 14px 14px}
@@ -191,10 +195,10 @@
     .tableWrap table{min-width:640px;font-size:12px}
     th,td{padding:8px 9px}
 
-    .sheet{padding:0;inset:0;overflow:auto}
-    .dialog{display:flex;flex-direction:column;border-radius:0;max-width:100vw;width:100%;min-height:100dvh;border:none;overflow-x:hidden}
+    .sheet{padding:0;inset:0;overflow:hidden}
+    .dialog{display:flex;flex-direction:column;border-radius:0;max-width:100vw;width:100%;height:100dvh;max-height:100dvh;border:none;overflow:hidden}
     .dlgH{position:sticky;top:0;z-index:2;background:var(--surface);padding:12px;gap:8px;flex-direction:column;align-items:stretch}
-    .dlgB{padding:12px 10px max(130px,calc(env(safe-area-inset-bottom) + 110px))}
+    .dlgB{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 10px max(24px,calc(env(safe-area-inset-bottom) + 24px))}
     .dlgH .t,.dlgH .st{white-space:normal}
     .dlgH > div:last-child{display:flex;gap:8px}
     .dlgH > div:last-child .btn{flex:1}
