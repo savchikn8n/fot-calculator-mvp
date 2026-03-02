@@ -147,7 +147,7 @@
   .roleS{font-size:11px;color:var(--text-muted);margin-top:6px}
   .add{padding:10px 12px;border-radius:14px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-soft);cursor:pointer;font-weight:700}
   .del{padding:10px 12px;border-radius:14px;border:1px solid var(--border);background:rgba(244,63,94,.12);color:#fecdd3;cursor:pointer;font-weight:800}
-  .rgrid{margin-top:10px;display:grid;grid-template-columns:repeat(14,1fr);gap:8px;align-items:center}
+  .rgrid{margin-top:10px;display:grid;grid-template-columns:repeat(16,1fr);gap:8px;align-items:center}
   .col4{grid-column:span 4}
   .col2{grid-column:span 2}
   .payout{text-align:right}
@@ -192,7 +192,7 @@
     .roleTop{flex-direction:column;align-items:stretch}
     .roleTop .add{width:100%}
     .role .rgrid.muted{display:none}
-    .rgrid{margin-top:8px;grid-template-columns:86px minmax(0,1fr) 72px 72px;gap:6px}
+    .rgrid{margin-top:8px;grid-template-columns:86px minmax(0,1fr) 62px 62px 62px;gap:6px}
     .col2,.col4{grid-column:auto}
     .del,.add{padding:9px 8px;font-size:12px}
     .payout{grid-column:1 / -1;text-align:left}
@@ -307,6 +307,12 @@
     return base;
   };
   const normalizeDayTextMap=x=>{
+    const src=x&&typeof x==="object"?x:{};
+    const out={};
+    Object.keys(src).forEach(k=>out[k]=String(src[k]??""));
+    return out;
+  };
+  const normalizeDayAmountMap=x=>{
     const src=x&&typeof x==="object"?x:{};
     const out={};
     Object.keys(src).forEach(k=>out[k]=String(src[k]??""));
@@ -433,6 +439,7 @@
     month:(new Date()).getMonth(),
     rev:{},
     unpaid:{},
+    tips:{},
     asgn:{},
     adv:normalizeAdv(null),
     bonus:normalizeBonus(null),
@@ -525,6 +532,7 @@
   const normalizeMonthData=d=>({
     rev:(d&&d.rev)||{},
     unpaid:(d&&d.unpaid)||{},
+    tips:normalizeDayAmountMap(d&&d.tips),
     asgn:(d&&d.asgn)||{},
     adv:normalizeAdv(d&&d.adv),
     bonus:normalizeBonus(d&&d.bonus),
@@ -604,6 +612,7 @@
     next.months[k]={
       rev:state.rev,
       unpaid:state.unpaid,
+      tips:state.tips,
       asgn:state.asgn,
       adv:state.adv,
       bonus:state.bonus,
@@ -776,6 +785,7 @@
     if(!d){
       state.rev={};
       state.unpaid={};
+      state.tips={};
       state.asgn={};
       state.adv=normalizeAdv(null);
       state.bonus=normalizeBonus(null);
@@ -793,6 +803,7 @@
     }
     state.rev=d.rev||{};
     state.unpaid=d.unpaid||{};
+    state.tips=normalizeDayAmountMap(d.tips);
     state.asgn=normalizeAssignsForMonth(d.asgn||{},state.year,state.month);
     state.adv=normalizeAdv(d.adv);
     state.bonus=normalizeBonus(d.bonus);
@@ -881,7 +892,7 @@
   };
 
   const calcMonthTotals=()=>{
-    let rawRevenue=0, unpaidRevenue=0, fotNet=0;
+    let rawRevenue=0, unpaidRevenue=0, tipsTotal=0, fotNet=0;
     const sumField=(arr,field)=>(arr||[]).reduce((a,r)=>a+Math.max(0,m0(r&&r[field])),0);
     const days=dim();
     for(let d=1; d<=days; d++){
@@ -891,6 +902,7 @@
       const r=raw+bo;
       rawRevenue+=raw;
       unpaidRevenue+=bo;
+      tipsTotal+=n0(state.tips[d]);
       const a=getDay(d,dt);
       const {totals}=computeForDay(r,a);
       const br=sumField(a.admin,"breakage")+sumField(a.km_main,"breakage")+sumField(a.km_support,"breakage")+sumField(a.km_support2,"breakage");
@@ -903,7 +915,7 @@
     const seniorAdminPay=revenue*SENIOR_ADMIN_PCT/100;
     const seniorKmPay=revenue*SENIOR_KM_PCT/100;
     fotNet+=bonusSum+managerPay+seniorAdminPay+seniorKmPay;
-    return{rawRevenue,unpaidRevenue,revenue,fotNet};
+    return{rawRevenue,unpaidRevenue,tipsTotal,revenue,fotNet};
   };
 
   const calcPeopleTotals=()=>{
@@ -1190,6 +1202,7 @@
       h+=`<div class="section"><div class="muted">БО</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.unpaidRevenue))}</div></div>`;
       h+=`<div class="section"><div class="muted">Общая выручка</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.revenue))}</div></div>`;
       h+=`<div class="section"><div class="muted">ФОТ (нетто)</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.fotNet))}</div></div>`;
+      h+=`<div class="section"><div class="muted">Чаевые</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.tipsTotal))}</div></div>`;
       h+=`</div></div></div>`;
       return h;
     })();
@@ -1260,8 +1273,20 @@
       const dt=open?new Date(state.year,state.month,d):null;
       const revBase=n0(open?state.rev[d]:0);
       const revUnpaid=n0(open?state.unpaid[d]:0);
+      const dayTips=n0(open?state.tips[d]:0);
       const rev=revBase+revUnpaid;
       const assigns=open?getDay(d,dt):null;
+      const shiftHeadcount=open?(()=>{
+        const names=new Set();
+        [assigns.admin,assigns.km_main,assigns.km_support,assigns.km_support2].forEach(rows=>{
+          (rows||[]).forEach(r=>{
+            const nm=String((r&&r.name)||"").trim();
+            if(nm) names.add(nm);
+          });
+        });
+        return names.size;
+      })():0;
+      const tipShare=shiftHeadcount>0?dayTips/shiftHeadcount:0;
       const c=open?computeForDay(rev, assigns):{tier:{id:"tier1",name:"< 50 000"},totals:{admin:0,km_main:0,km_support:0,km_support2:0}};
       const tier=c.tier, totals=c.totals;
 
@@ -1275,10 +1300,11 @@
         h+=`<button class="add" data-act="addRow" data-role="${roleKey}">+ Добавить</button></div>`;
         if(rr.length===0 && allowEmpty) h+=`<div class="hint">Нет записей. Добавь человека, если роль была в этот день.</div>`;
         if(rr.length>0){
-          h+=`<div class="rgrid muted"><div class="col2"></div><div class="col4"></div><div class="col2">Кол-во часов</div><div class="col2">Бой</div><div class="col4"></div></div>`;
+          h+=`<div class="rgrid muted"><div class="col2"></div><div class="col4"></div><div class="col2">Кол-во часов</div><div class="col2">Бой</div><div class="col2">Чаевые</div><div class="col4"></div></div>`;
         }
 
         rr.forEach((r,idx)=>{
+          const rowTip=tipShare;
           h+=`<div class="rgrid">`;
           h+=`<div class="col2"><button class="del" data-act="delRow" data-role="${roleKey}" data-idx="${idx}">Удалить</button></div>`;
           h+=`<div class="col4"><select class="sel" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="name">`+
@@ -1286,6 +1312,7 @@
             `</select></div>`;
           h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="hours" value="${html(r.hours??"")}"></div>`;
           h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"")}" placeholder="Бой"></div>`;
+          h+=`<div class="col2"><input class="inp" value="${html(money(rowTip))}" readonly tabindex="-1"></div>`;
           h+=`<div class="col4 payout"><div class="pTop">${html(money(net[idx]||0))}</div><div class="pSub">${html(money(payouts[idx]||0))} − ${html(money(br[idx]||0))}</div></div>`;
           h+=`</div>`;
         });
@@ -1304,11 +1331,12 @@
       h+=`<div class="dlgB">`;
 
       if(open){
-        h+=`<div class="section" style="margin-bottom:12px"><div class="row2" style="grid-template-columns:2fr 1fr">`;
+        h+=`<div class="section" style="margin-bottom:12px"><div class="row2" style="grid-template-columns:2fr 1fr 1fr">`;
         h+=`<div><div class="muted" style="margin-bottom:6px">Выручка дня</div><input class="inp" data-act="setDayRevenue" value="${html(state.rev[d]??"")}" placeholder="0"></div>`;
         h+=`<div><div class="muted" style="margin-bottom:6px">Без оплаты</div><input class="inp" data-act="setDayUnpaid" value="${html(state.unpaid[d]??"")}" placeholder="0"></div>`;
+        h+=`<div><div class="muted" style="margin-bottom:6px">Чаевые</div><input class="inp" data-act="setDayTips" value="${html(state.tips[d]??"")}" placeholder="0"></div>`;
         h+=`</div>`;
-        h+=`<div class="muted" style="margin-top:8px">Сейчас: ${html(money(rev))} = ${html(money(revBase))} + ${html(money(revUnpaid))} · Тариф: ${html(tier.name)}</div></div>`;
+        h+=`<div class="muted" style="margin-top:8px">Сейчас: ${html(money(rev))} = ${html(money(revBase))} + ${html(money(revUnpaid))} · Чаевые: ${html(money(dayTips))} · на сотрудника: ${html(money(tipShare))} · Тариф: ${html(tier.name)}</div></div>`;
 
         h+=rolePanel("Администратор","admin",ADMINS,totals.admin,assigns.admin,false);
         h+=`<div style="height:10px"></div>`;
@@ -1353,6 +1381,7 @@
         "button[data-act='delRow']",
         "input[data-act='setDayRevenue']",
         "input[data-act='setDayUnpaid']",
+        "input[data-act='setDayTips']",
         "input[data-act='setRate']",
         "input[data-act='setInvA']",
         "input[data-act='setInvK']",
@@ -1633,10 +1662,11 @@
         kind:"month",
         rev:{...state.rev},
         unpaid:{...state.unpaid},
+        tips:{...state.tips},
         asgn:JSON.parse(JSON.stringify(state.asgn||{})),
         dayComment:{...state.dayComment}
       };
-      state.rev={}; state.unpaid={}; state.asgn={}; state.dayComment={}; state.activeDay=null; state.confirmClear=false;
+      state.rev={}; state.unpaid={}; state.tips={}; state.asgn={}; state.dayComment={}; state.activeDay=null; state.confirmClear=false;
       scheduleSave();
       render();
       return;
@@ -1663,6 +1693,8 @@
         revValue:state.rev[d],
         hadUnpaid:Object.prototype.hasOwnProperty.call(state.unpaid,d),
         unpaidValue:state.unpaid[d],
+        hadTips:Object.prototype.hasOwnProperty.call(state.tips,d),
+        tipsValue:state.tips[d],
         hadAsgn:Object.prototype.hasOwnProperty.call(state.asgn,d),
         asgnValue:JSON.parse(JSON.stringify(state.asgn[d]||null)),
         hadComment:Object.prototype.hasOwnProperty.call(state.dayComment,d),
@@ -1670,6 +1702,7 @@
       };
       const nextRev={...state.rev}; delete nextRev[d];
       const nextUnpaid={...state.unpaid}; delete nextUnpaid[d];
+      const nextTips={...state.tips}; delete nextTips[d];
       const dt=new Date(state.year,state.month,d);
       const day=state.asgn[d]||defDay(dt);
       const keepOne=(rows,role)=>{
@@ -1692,6 +1725,7 @@
       const nextComment={...state.dayComment}; delete nextComment[d];
       state.rev=nextRev;
       state.unpaid=nextUnpaid;
+      state.tips=nextTips;
       state.asgn=nextAsgn;
       state.dayComment=nextComment;
       scheduleSave();
@@ -1704,15 +1738,17 @@
       if(u.kind==="month"){
         state.rev=u.rev||{};
         state.unpaid=u.unpaid||{};
+        state.tips=u.tips||{};
         state.asgn=u.asgn||{};
         state.dayComment=u.dayComment||{};
       }else if(u.kind==="day"){
         const d=u.day;
         const nextRev={...state.rev}; if(u.hadRev) nextRev[d]=u.revValue; else delete nextRev[d];
         const nextUnpaid={...state.unpaid}; if(u.hadUnpaid) nextUnpaid[d]=u.unpaidValue; else delete nextUnpaid[d];
+        const nextTips={...state.tips}; if(u.hadTips) nextTips[d]=u.tipsValue; else delete nextTips[d];
         const nextAsgn={...state.asgn}; if(u.hadAsgn) nextAsgn[d]=u.asgnValue; else delete nextAsgn[d];
         const nextComment={...state.dayComment}; if(u.hadComment) nextComment[d]=u.commentValue; else delete nextComment[d];
-        state.rev=nextRev; state.unpaid=nextUnpaid; state.asgn=nextAsgn; state.dayComment=nextComment;
+        state.rev=nextRev; state.unpaid=nextUnpaid; state.tips=nextTips; state.asgn=nextAsgn; state.dayComment=nextComment;
       }
       state.undoClear=null;
       scheduleSave();
@@ -1893,6 +1929,14 @@
       render();
       return;
     }
+    if(t.matches("input[data-act='setDayTips']")){
+      if(!isMobileView()) return;
+      const d=state.activeDay; if(!d) return;
+      state.tips={...state.tips,[d]:t.value};
+      scheduleSave();
+      render();
+      return;
+    }
     if(t.matches("input[data-act='setStaffName']")){
       const idx=Number(t.getAttribute("data-idx"));
       if(idx<0 || idx>=state.staff.length) return;
@@ -1933,6 +1977,7 @@
     if(state.readOnly && (
       t.matches("input[data-act='setDayRevenue']") ||
       t.matches("input[data-act='setDayUnpaid']") ||
+      t.matches("input[data-act='setDayTips']") ||
       t.matches("input[data-act='setRate']") ||
       t.matches("input[data-act='setInvA']") ||
       t.matches("input[data-act='setInvK']") ||
@@ -1958,6 +2003,14 @@
     if(t.matches("input[data-act='setDayUnpaid']")){
       const d=state.activeDay; if(!d) return;
       state.unpaid={...state.unpaid,[d]:t.value};
+      if(isMobileView()) return;
+      scheduleSave();
+      renderKeepFocus();
+      return;
+    }
+    if(t.matches("input[data-act='setDayTips']")){
+      const d=state.activeDay; if(!d) return;
+      state.tips={...state.tips,[d]:t.value};
       if(isMobileView()) return;
       scheduleSave();
       renderKeepFocus();
