@@ -150,14 +150,19 @@
   .rgrid{margin-top:10px;display:grid;grid-template-columns:repeat(16,1fr);gap:8px;align-items:center}
   .col4{grid-column:span 4}
   .col2{grid-column:span 2}
+  .rowCtl,.rowName,.rowHours,.rowBreak,.rowTip,.rowPay{min-width:0}
   .payout{text-align:right}
   .pTop{font-weight:800;color:var(--text-strong);font-variant-numeric:tabular-nums}
   .pSub{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums;margin-top:4px}
   .hint{font-size:11px;color:var(--text-muted);margin-top:10px}
+  .mobFold > summary{list-style:none;cursor:pointer;padding:14px 14px 10px;display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+  .mobFold > summary::-webkit-details-marker{display:none}
+  .mobFold > summary .muted{padding-top:2px}
   @media (max-width:900px){
-    .bg{overflow-x:hidden}
-    .wrap{padding:12px}
+    .bg{overflow-x:hidden;padding-top:env(safe-area-inset-top);padding-bottom:max(14px,env(safe-area-inset-bottom))}
+    .wrap{width:98vw;max-width:98vw;padding:8px 0;margin:0 auto}
     .grid,.min,.card,.card-h,.card-b,.section,.tableWrap,.role,.dialog{min-width:0}
+    .grid{gap:10px}
     .card{border-radius:18px}
     .card-h{padding:14px 14px 8px;flex-direction:column;align-items:stretch;gap:10px}
     .card-b{padding:0 14px 14px}
@@ -180,10 +185,10 @@
     .tableWrap table{min-width:640px;font-size:12px}
     th,td{padding:8px 9px}
 
-    .sheet{padding:8px}
-    .dialog{border-radius:18px;max-width:100%}
+    .sheet{padding:0;inset:0;overflow:auto}
+    .dialog{border-radius:0;max-width:100vw;min-height:100dvh;border-left:none;border-right:none}
     .dlgH{padding:12px;gap:8px;flex-direction:column;align-items:stretch}
-    .dlgB{padding:12px}
+    .dlgB{padding:12px 10px calc(14px + env(safe-area-inset-bottom))}
     .dlgH .t,.dlgH .st{white-space:normal}
     .dlgH > div:last-child{display:flex;gap:8px}
     .dlgH > div:last-child .btn{flex:1}
@@ -191,14 +196,24 @@
     .role{padding:10px;border-radius:14px}
     .roleTop{flex-direction:column;align-items:stretch}
     .roleTop .add{width:100%}
-    .role .rgrid.muted{display:none}
-    .rgrid{margin-top:8px;grid-template-columns:86px minmax(0,1fr) 62px 62px 62px;gap:6px}
+    .role .rgrid.muted{margin-top:6px;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:end}
+    .role .rgrid.muted .rowCtl,.role .rgrid.muted .rowName,.role .rgrid.muted .rowPay{display:none}
+    .role .rgrid.muted .rowHours,.role .rgrid.muted .rowBreak,.role .rgrid.muted .rowTip{text-align:center;font-size:11px}
+    .rgrid{margin-top:8px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:start}
     .col2,.col4{grid-column:auto}
+    .rowCtl{grid-column:1}
+    .rowName{grid-column:2}
+    .rowHours{grid-column:1}
+    .rowBreak{grid-column:2}
+    .rowTip{grid-column:1}
+    .rowPay{grid-column:1 / -1}
     .del,.add{padding:9px 8px;font-size:12px}
-    .payout{grid-column:1 / -1;text-align:left}
+    .payout{text-align:left}
     .pTop{font-size:26px}
     .pSub{font-size:12px}
     .sel,.inp,.ta{font-size:16px}
+    .rowName .sel{padding-right:28px}
+    .rowName .sel,.rowCtl .del,.rowHours .inp,.rowBreak .inp,.rowTip .inp{width:100%}
 
     .cnt{width:38px;height:38px;font-size:13px}
     .cntRow,.cntHdr{grid-template-columns:repeat(3,38px);gap:8px}
@@ -1030,6 +1045,13 @@
     const mt=calcMonthTotals();
     const pt=calcPeopleTotals();
     const sc=calcShiftCounts();
+    const mobileReadOnly=state.readOnly && isMobileView();
+    const foldCard=(title,subtitle,body,open)=>{
+      if(!mobileReadOnly){
+        return `<div class="card"><div class="card-h"><div><div class="t">${html(title)}</div><div class="st">${html(subtitle)}</div></div></div><div class="card-b">${body}</div></div>`;
+      }
+      return `<details class="card mobFold" ${open?"open":""}><summary><div><div class="t">${html(title)}</div><div class="st">${html(subtitle)}</div></div><div class="muted">Развернуть</div></summary><div class="card-b">${body}</div></details>`;
+    };
 
     const cal=(()=>{
       const fd=new Date(state.year,state.month,1);
@@ -1215,22 +1237,21 @@
 
     const manager=(()=>{
       const pay=mt.revenue*MANAGER_PCT/100;
-      let h=`<div class="card"><div class="card-h"><div><div class="t">Управляющая</div><div class="st">${MANAGER_NAME} · Итог: ${html(money(pay))}</div></div></div><div class="card-b">`;
-      h+=`<div class="section"><div class="muted">Фиксированный процент</div><div style="margin-top:6px;font-size:18px;font-weight:900">${MANAGER_PCT}%</div><div class="muted" style="margin-top:6px">От общей выручки месяца</div></div>`;
-      h+=`<div class="section" style="margin-top:12px"><div class="muted">Расчёт</div><div style="margin-top:6px;font-size:18px;font-weight:900">${html(money(pay))}</div><div class="muted" style="margin-top:6px">${MANAGER_PCT}% × ${html(money(mt.revenue))}</div></div>`;
-      h+=`</div></div>`;
-      return h;
+      let body="";
+      body+=`<div class="section"><div class="muted">Фиксированный процент</div><div style="margin-top:6px;font-size:18px;font-weight:900">${MANAGER_PCT}%</div><div class="muted" style="margin-top:6px">От общей выручки месяца</div></div>`;
+      body+=`<div class="section" style="margin-top:12px"><div class="muted">Расчёт</div><div style="margin-top:6px;font-size:18px;font-weight:900">${html(money(pay))}</div><div class="muted" style="margin-top:6px">${MANAGER_PCT}% × ${html(money(mt.revenue))}</div></div>`;
+      return foldCard("Управляющая",`${MANAGER_NAME} · Итог: ${money(pay)}`,body,false);
     })();
 
     const totals=(()=>{
-      let h=`<div class="card"><div class="card-h"><div><div class="t">Итого</div><div class="st">Сводка месяца</div></div></div><div class="card-b"><div class="row">`;
-      h+=`<div class="section"><div class="muted">Голая выручка</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.rawRevenue))}</div></div>`;
-      h+=`<div class="section"><div class="muted">БО</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.unpaidRevenue))}</div></div>`;
-      h+=`<div class="section"><div class="muted">Общая выручка</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.revenue))}</div></div>`;
-      h+=`<div class="section"><div class="muted">ФОТ (нетто)</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.fotNet))}</div></div>`;
-      h+=`<div class="section"><div class="muted">Чаевые</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.tipsTotal))}</div></div>`;
-      h+=`</div></div></div>`;
-      return h;
+      let body=`<div class="row">`;
+      body+=`<div class="section"><div class="muted">Голая выручка</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.rawRevenue))}</div></div>`;
+      body+=`<div class="section"><div class="muted">БО</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.unpaidRevenue))}</div></div>`;
+      body+=`<div class="section"><div class="muted">Общая выручка</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.revenue))}</div></div>`;
+      body+=`<div class="section"><div class="muted">ФОТ (нетто)</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.fotNet))}</div></div>`;
+      body+=`<div class="section"><div class="muted">Чаевые</div><div style="margin-top:6px;font-size:22px;font-weight:900">${html(money(mt.tipsTotal))}</div></div>`;
+      body+=`</div>`;
+      return foldCard("Итого","Сводка месяца",body,false);
     })();
 
     const sidebar=(()=>{
@@ -1273,18 +1294,21 @@
       if(state.scheduleError) h+=`<div class="hint" style="color:#ef4444">${html(state.scheduleError)}</div>`;
       h+=`</div></div></div>`;
 
-      h+=`<div class="card" style="margin-top:12px"><div class="card-h"><div><div class="t">Количество смен</div><div class="st">Учитываются только дни с заполненной выручкой</div></div></div><div class="card-b">`;
-      h+=`<div class="section"><div class="secT">Администраторы</div><div class="row" style="margin-top:10px">`;
-      ADMINS.forEach(n=>{ h+=`<div class="lg"><div>${html(n)}</div><div class="cnt">${sc.adminCounts[n]||0}</div></div>`; });
-      h+=`</div></div>`;
-      h+=`<div class="section" style="margin-top:10px"><div class="secT">Кальянные мастера</div>`;
-      h+=`<div class="kmShiftHead"><div></div><div class="cntHdr"><div>КМ</div><div>КМс</div><div>КМс²</div></div></div>`;
+      let shiftsBody=`<div class="section"><div class="secT">Администраторы</div><div class="row" style="margin-top:10px">`;
+      ADMINS.forEach(n=>{ shiftsBody+=`<div class="lg"><div>${html(n)}</div><div class="cnt">${sc.adminCounts[n]||0}</div></div>`; });
+      shiftsBody+=`</div></div>`;
+      shiftsBody+=`<div class="section" style="margin-top:10px"><div class="secT">Кальянные мастера</div>`;
+      shiftsBody+=`<div class="kmShiftHead"><div></div><div class="cntHdr"><div>КМ</div><div>КМс</div><div>КМс²</div></div></div>`;
       KMS.forEach(n=>{
         const c=sc.kmCounts[n]||{km_main:0,km_support:0,km_support2:0};
-        h+=`<div class="kmShiftLine"><div>${html(n)}</div><div class="cntRow"><div class="cnt">${c.km_main||0}</div><div class="cnt">${c.km_support||0}</div><div class="cnt">${c.km_support2||0}</div></div></div>`;
+        shiftsBody+=`<div class="kmShiftLine"><div>${html(n)}</div><div class="cntRow"><div class="cnt">${c.km_main||0}</div><div class="cnt">${c.km_support||0}</div><div class="cnt">${c.km_support2||0}</div></div></div>`;
       });
-      h+=`</div>`;
-      h+=`</div></div>`;
+      shiftsBody+=`</div>`;
+      if(mobileReadOnly){
+        h+=`<details class="card mobFold" style="margin-top:12px"><summary><div><div class="t">Количество смен</div><div class="st">Учитываются только дни с заполненной выручкой</div></div><div class="muted">Развернуть</div></summary><div class="card-b">${shiftsBody}</div></details>`;
+      }else{
+        h+=`<div class="card" style="margin-top:12px"><div class="card-h"><div><div class="t">Количество смен</div><div class="st">Учитываются только дни с заполненной выручкой</div></div></div><div class="card-b">${shiftsBody}</div></div>`;
+      }
       return h;
     })();
 
@@ -1326,20 +1350,20 @@
         h+=`<button class="add" data-act="addRow" data-role="${roleKey}">+ Добавить</button></div>`;
         if(rr.length===0 && allowEmpty) h+=`<div class="hint">Нет записей. Добавь человека, если роль была в этот день.</div>`;
         if(rr.length>0){
-          h+=`<div class="rgrid muted"><div class="col2"></div><div class="col4"></div><div class="col2">Кол-во часов</div><div class="col2">Бой</div><div class="col2">Чаевые</div><div class="col4"></div></div>`;
+          h+=`<div class="rgrid muted"><div class="col2 rowCtl"></div><div class="col4 rowName"></div><div class="col2 rowHours">Кол-во часов</div><div class="col2 rowBreak">Бой</div><div class="col2 rowTip">Чаевые</div><div class="col4 rowPay"></div></div>`;
         }
 
         rr.forEach((r,idx)=>{
           const rowTip=tipShare;
           h+=`<div class="rgrid">`;
-          h+=`<div class="col2"><button class="del" data-act="delRow" data-role="${roleKey}" data-idx="${idx}">Удалить</button></div>`;
-          h+=`<div class="col4"><select class="sel" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="name">`+
+          h+=`<div class="col2 rowCtl"><button class="del" data-act="delRow" data-role="${roleKey}" data-idx="${idx}">Удалить</button></div>`;
+          h+=`<div class="col4 rowName"><select class="sel" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="name">`+
             people.map(p=>`<option value="${html(p)}" ${p===(r.name||"")?"selected":""}>${html(p)}</option>`).join("")+
             `</select></div>`;
-          h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="hours" value="${html(r.hours??"")}"></div>`;
-          h+=`<div class="col2"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"")}" placeholder="Бой"></div>`;
-          h+=`<div class="col2"><input class="inp" value="${html(money(rowTip))}" readonly tabindex="-1"></div>`;
-          h+=`<div class="col4 payout"><div class="pTop">${html(money(net[idx]||0))}</div><div class="pSub">${html(money(payouts[idx]||0))} − ${html(money(br[idx]||0))}</div></div>`;
+          h+=`<div class="col2 rowHours"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="hours" value="${html(r.hours??"")}"></div>`;
+          h+=`<div class="col2 rowBreak"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"")}" placeholder="Бой"></div>`;
+          h+=`<div class="col2 rowTip"><input class="inp" value="${html(money(rowTip))}" readonly tabindex="-1"></div>`;
+          h+=`<div class="col4 rowPay payout"><div class="pTop">${html(money(net[idx]||0))}</div><div class="pSub">${html(money(payouts[idx]||0))} − ${html(money(br[idx]||0))}</div></div>`;
           h+=`</div>`;
         });
 
