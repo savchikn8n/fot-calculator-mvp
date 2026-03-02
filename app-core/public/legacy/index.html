@@ -151,6 +151,7 @@
   .col4{grid-column:span 4}
   .col2{grid-column:span 2}
   .rowCtl,.rowName,.rowHours,.rowBreak,.rowTip,.rowPay{min-width:0}
+  .fldLbl{display:none}
   .payout{text-align:right}
   .pTop{font-weight:800;color:var(--text-strong);font-variant-numeric:tabular-nums}
   .pSub{font-size:11px;color:var(--text-muted);font-variant-numeric:tabular-nums;margin-top:4px}
@@ -159,7 +160,8 @@
   .mobFold > summary::-webkit-details-marker{display:none}
   .mobFold > summary .muted{padding-top:2px}
   @media (max-width:900px){
-    .bg{overflow-x:hidden;padding-top:env(safe-area-inset-top);padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px))}
+    html,body,#fot-app,.bg{overflow-x:hidden}
+    .bg{padding-top:env(safe-area-inset-top);padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px))}
     .wrap{width:95vw;max-width:95vw;padding:8px 0 48px;margin:0 auto}
     .grid,.min,.card,.card-h,.card-b,.section,.tableWrap,.role,.dialog{min-width:0}
     .grid{gap:10px}
@@ -186,7 +188,7 @@
     th,td{padding:8px 9px}
 
     .sheet{padding:0;inset:0;overflow:auto}
-    .dialog{border-radius:0;max-width:100vw;min-height:100dvh;border-left:none;border-right:none}
+    .dialog{border-radius:0;max-width:100vw;width:100%;min-height:100dvh;border-left:none;border-right:none;overflow-x:hidden}
     .dlgH{padding:12px;gap:8px;flex-direction:column;align-items:stretch}
     .dlgB{padding:12px 10px calc(14px + env(safe-area-inset-bottom))}
     .dlgH .t,.dlgH .st{white-space:normal}
@@ -196,17 +198,17 @@
     .role{padding:10px;border-radius:14px}
     .roleTop{flex-direction:column;align-items:stretch}
     .roleTop .add{width:100%}
-    .role .rgrid.muted{margin-top:6px;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:end}
-    .role .rgrid.muted .rowCtl,.role .rgrid.muted .rowName,.role .rgrid.muted .rowPay{display:none}
-    .role .rgrid.muted .rowHours,.role .rgrid.muted .rowBreak,.role .rgrid.muted .rowTip{text-align:center;font-size:11px}
-    .rgrid{margin-top:8px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:start}
+    .role,.section,.dlgB,.card-b{overflow-x:hidden}
+    .role .rgrid.muted{display:none}
+    .rgrid{margin-top:8px;grid-template-columns:minmax(0,1fr);gap:8px;align-items:start}
     .col2,.col4{grid-column:auto}
     .rowCtl{grid-column:1}
-    .rowName{grid-column:2}
+    .rowName{grid-column:1}
     .rowHours{grid-column:1}
-    .rowBreak{grid-column:2}
+    .rowBreak{grid-column:1}
     .rowTip{grid-column:1}
     .rowPay{grid-column:1 / -1}
+    .fldLbl{display:block;font-size:11px;color:var(--text-muted);margin:0 0 4px 2px;text-align:left}
     .del,.add{padding:9px 8px;font-size:12px}
     .payout{text-align:left}
     .pTop{font-size:26px}
@@ -1356,14 +1358,14 @@
         rr.forEach((r,idx)=>{
           const rowTip=tipShare;
           h+=`<div class="rgrid">`;
-          h+=`<div class="col2 rowCtl"><button class="del" data-act="delRow" data-role="${roleKey}" data-idx="${idx}">Удалить</button></div>`;
-          h+=`<div class="col4 rowName"><select class="sel" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="name">`+
+          h+=`<div class="col2 rowCtl"><div class="fldLbl">Действие</div><button class="del" data-act="delRow" data-role="${roleKey}" data-idx="${idx}">Удалить</button></div>`;
+          h+=`<div class="col4 rowName"><div class="fldLbl">Сотрудник</div><select class="sel" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="name">`+
             people.map(p=>`<option value="${html(p)}" ${p===(r.name||"")?"selected":""}>${html(p)}</option>`).join("")+
             `</select></div>`;
-          h+=`<div class="col2 rowHours"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="hours" value="${html(r.hours??"")}"></div>`;
-          h+=`<div class="col2 rowBreak"><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"")}" placeholder="Бой"></div>`;
-          h+=`<div class="col2 rowTip"><input class="inp" value="${html(money(rowTip))}" readonly tabindex="-1"></div>`;
-          h+=`<div class="col4 rowPay payout"><div class="pTop">${html(money(net[idx]||0))}</div><div class="pSub">${html(money(payouts[idx]||0))} − ${html(money(br[idx]||0))}</div></div>`;
+          h+=`<div class="col2 rowHours"><div class="fldLbl">Кол-во часов</div><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="hours" value="${html(r.hours??"")}"></div>`;
+          h+=`<div class="col2 rowBreak"><div class="fldLbl">Бой</div><input class="inp" data-act="setRow" data-role="${roleKey}" data-idx="${idx}" data-field="breakage" value="${html(r.breakage??"")}" placeholder="Бой"></div>`;
+          h+=`<div class="col2 rowTip"><div class="fldLbl">Чаевые</div><input class="inp" value="${html(money(rowTip))}" readonly tabindex="-1"></div>`;
+          h+=`<div class="col4 rowPay payout"><div class="fldLbl">Итог</div><div class="pTop">${html(money(net[idx]||0))}</div><div class="pSub">${html(money(payouts[idx]||0))} − ${html(money(br[idx]||0))}</div></div>`;
           h+=`</div>`;
         });
 
