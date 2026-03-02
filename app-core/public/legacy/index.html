@@ -162,11 +162,13 @@
   .mobFold > summary .muted{padding-top:2px}
   @media (max-width:900px){
     html,body,#fot-app,.bg{overflow-x:hidden}
-    .bg{padding-top:env(safe-area-inset-top);padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px))}
-    .wrap{width:100%;max-width:none;padding:8px 2.5% 48px;margin:0 auto}
+    .bg{width:100%;max-width:100%;padding-top:env(safe-area-inset-top);padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px))}
+    .wrap{width:100%;max-width:100%;padding:8px 2.5% 72px;margin:0 auto}
     .grid,.min,.card,.card-h,.card-b,.section,.tableWrap,.role,.dialog{min-width:0}
-    .grid,.min{max-width:100%}
+    .grid,.min,.card{width:100%;max-width:100%}
     .grid{gap:10px}
+    .row2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+    .row2 > *, .tabs > *, .card-h > *{min-width:0}
     .card{border-radius:16px;box-shadow:none}
     .card-h{padding:14px 14px 8px;flex-direction:column;align-items:stretch;gap:10px}
     .card-b{padding:0 14px 14px}
@@ -190,9 +192,9 @@
     th,td{padding:8px 9px}
 
     .sheet{padding:0;inset:0;overflow:auto}
-    .dialog{border-radius:0;max-width:100vw;width:100%;min-height:100dvh;border:none;overflow-x:hidden}
-    .dlgH{padding:12px;gap:8px;flex-direction:column;align-items:stretch}
-    .dlgB{padding:12px 10px calc(14px + env(safe-area-inset-bottom))}
+    .dialog{display:flex;flex-direction:column;border-radius:0;max-width:100vw;width:100%;min-height:100dvh;border:none;overflow-x:hidden}
+    .dlgH{position:sticky;top:0;z-index:2;background:var(--surface);padding:12px;gap:8px;flex-direction:column;align-items:stretch}
+    .dlgB{padding:12px 10px max(130px,calc(env(safe-area-inset-bottom) + 110px))}
     .dlgH .t,.dlgH .st{white-space:normal}
     .dlgH > div:last-child{display:flex;gap:8px}
     .dlgH > div:last-child .btn{flex:1}
