@@ -163,14 +163,15 @@
   .mobFold > summary .muted{padding-top:2px}
   @media (max-width:900px){
     html,body,#fot-app,.bg{width:100%;max-width:100%;overflow-x:clip}
-    .bg{width:100%;max-width:100%;padding-top:env(safe-area-inset-top);padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px))}
-    .wrap{width:min(95vw,100%);max-width:min(95vw,100%);padding:8px 0 72px;margin:0 auto}
+    .bg{width:100%;max-width:100%;padding-top:env(safe-area-inset-top);padding-right:max(8px,env(safe-area-inset-right));padding-bottom:max(72px,calc(env(safe-area-inset-bottom) + 56px));padding-left:max(8px,env(safe-area-inset-left))}
+    .wrap{width:100%;max-width:100%;padding:8px 0 72px;margin:0 auto}
     .wrap > *{width:100%;max-width:100%}
     .grid,.min,.card,.card-h,.card-b,.section,.tableWrap,.role,.dialog{min-width:0}
     .grid,.min,.card{width:100%;max-width:100%}
     .grid{gap:10px}
     .row,.row2,.tabs{max-width:100%}
     .row2{grid-template-columns:minmax(0,1fr)}
+    .monthIo{grid-template-columns:repeat(2,minmax(0,1fr))}
     .row2 > *, .tabs > *, .card-h > *{min-width:0}
     .sel,.inp,.btn,.pill,.ta{min-width:0;max-width:100%}
     .card{border-radius:16px;box-shadow:none}
@@ -195,10 +196,10 @@
     .tableWrap table{min-width:640px;font-size:12px}
     th,td{padding:8px 9px}
 
-    .sheet{padding:0;inset:0;overflow:hidden}
-    .dialog{display:flex;flex-direction:column;border-radius:0;max-width:100vw;width:100%;height:100dvh;max-height:100dvh;border:none;overflow:hidden}
+    .sheet{padding:0;inset:0;overflow:auto}
+    .dialog{display:flex;flex-direction:column;border-radius:0;max-width:100vw;width:100%;min-height:100dvh;border:none;overflow-x:hidden}
     .dlgH{position:sticky;top:0;z-index:2;background:var(--surface);padding:12px;gap:8px;flex-direction:column;align-items:stretch}
-    .dlgB{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 10px max(24px,calc(env(safe-area-inset-bottom) + 24px))}
+    .dlgB{padding:12px 10px max(130px,calc(env(safe-area-inset-bottom) + 110px))}
     .dlgH .t,.dlgH .st{white-space:normal}
     .dlgH > div:last-child{display:flex;gap:8px}
     .dlgH > div:last-child .btn{flex:1}
@@ -1296,7 +1297,7 @@
       h+=`<select class="sel" data-act="setYear">${yopts.map(y=>`<option value="${y}" ${y===state.year?"selected":""}>${y}</option>`).join("")}</select>`;
       h+=`<select class="sel" data-act="setMonth">${MONTHS.map((m,i)=>`<option value="${i}" ${i===state.month?"selected":""}>${html(m)}</option>`).join("")}</select>`;
       h+=`</div>`;
-      h+=`<div class="row2" style="margin-top:10px">`;
+      h+=`<div class="row2 monthIo" style="margin-top:10px">`;
       h+=`<button class="btn ghost" data-act="exportMonth">Экспорт</button>`;
       h+=`<button class="btn ghost" data-act="importMonth" ${state.readOnly?"disabled":""}>Импорт</button>`;
       h+=`</div>`;
